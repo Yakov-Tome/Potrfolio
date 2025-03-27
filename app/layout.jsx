@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar.jsx";
 import { ContentProvider } from "@/Context/GlobalContext.jsx";
 import Footer from "./components/Footer";
 import CustomCursor from "./components/CustomCursor";
+import { Analytics } from "@vercel/analytics/next";
 
 // Load Google Font
 const poppins = Poppins({
@@ -33,6 +34,7 @@ export default function RootLayout({ children }) {
           <Footer />
         </ContentProvider>
         <CustomCursor />
+        <Analytics /> {/* Vercel Analytics – must be inside <body> */}
       </body>
     </html>
   );
