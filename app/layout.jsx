@@ -25,7 +25,7 @@ export const metadata = {
 // Root layout wrapping the entire app
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={poppins.variable}>
+    <html lang="en" className={poppins.variable} data-theme="dark">
       <body className="font-poppins min-h-screen flex flex-col">
         <ContentProvider>
           <Navbar />
