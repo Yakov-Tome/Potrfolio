@@ -31,7 +31,7 @@ const SingleBlog = () => {
 
   return (
     <motion.div
-      className="container mx-auto p-6 md:p-24 bg-black/40 rounded-xl mb-10"
+      className="container mx-auto bg-black/40 rounded-lg  mb-18 mt-4 pb-20"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
@@ -40,7 +40,7 @@ const SingleBlog = () => {
         <Title text="post" textcolor="details" backword="blog" />
 
         <motion.h1
-          className="text-2xl font-bold mt-4 text-white"
+          className="text-2xl font-bold text-white"
           variants={fadeInUp}
           initial="hidden"
           animate="visible"

@@ -1,9 +1,11 @@
 "use client";
 import { motion } from "framer-motion";
 
-const Title = ({ text, textcolor, backword }) => {
+const Title = ({ text, textcolor, backword, padding = "py-16" }) => {
   return (
-    <div className="uppercase sm:text-center text-4xl sm:text-6xl font-[900] py-16 text-white relative">
+    <div
+      className={`uppercase sm:text-center text-4xl sm:text-6xl font-[900] ${padding} text-white relative`}
+    >
       <motion.div
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}

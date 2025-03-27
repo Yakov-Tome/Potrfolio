@@ -75,7 +75,7 @@ const Experience = () => {
         <motion.li
           key={i}
           variants={itemVariants}
-          className="flex items-start space-x-4 text-xs"
+          className="flex items-start space-x-4 text-xs pb-10"
         >
           <div className="flex items-center justify-center p-2 rounded-full bg-primary text-white shadow-md relative">
             <FaBriefcase size={18} />

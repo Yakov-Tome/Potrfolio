@@ -111,7 +111,12 @@ const Blog = () => {
             transition={{ duration: 0.5 }}
           >
             <article>
-              <Title text="post" textcolor="details" backword="posts" />
+              <Title
+                text="post"
+                textcolor="details"
+                backword="posts"
+                padding="py-14"
+              />
 
               <motion.div
                 className="flex flex-wrap gap-4 mt-4 text-sm text-gray-300"

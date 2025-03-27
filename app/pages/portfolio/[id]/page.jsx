@@ -35,7 +35,7 @@ const SinglePortfolio = () => {
 
   return (
     <motion.div
-      className="container mx-auto p-6 lg:p-24 bg-black/40 rounded-lg pt-0 m-4"
+      className="container mx-auto bg-black/40 rounded-lg mb-18 mt-4 pb-20"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}

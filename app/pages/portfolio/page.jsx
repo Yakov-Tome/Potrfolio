@@ -113,9 +113,11 @@ const Portfolio = () => {
         >
           <div className="text-sm text-gray-500">
             <div className="flex flex-col items-center">
-              <h2 className="text-3xl font-semibold p-2 mb-4 text-yellow-400 bg-white/10 rounded-xl">
-                {singleData?.type}
-              </h2>
+              <Title
+                text={singleData?.type}
+                textcolor="Project"
+                backword="Details"
+              />
 
               {singleData?.modalDetails?.map((data, index) => (
                 <div key={index}>
