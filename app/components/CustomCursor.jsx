@@ -1,5 +1,3 @@
-// 📁 app/components/CustomCursor.jsx
-"use client";
 import AnimatedCursor from "react-animated-cursor";
 
 const CustomCursor = () => (

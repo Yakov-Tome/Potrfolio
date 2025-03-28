@@ -6,6 +6,7 @@ import img4 from "@/public/blog/blog-post-4.jpg";
 import img5 from "@/public/blog/blog-post-5.jpg";
 import img6 from "@/public/blog/blog-post-6.jpg";
 import img7 from "@/public/blog/blog-post-7.jpg";
+import img8 from "@/public/blog/blog-post-8.jpg";
 
 export const blogs = [
   {
@@ -119,5 +120,21 @@ export const blogs = [
       "I structured the project using the App Router in Next.js, applied reusable components, built global context from scratch, and integrated tools like Framer Motion, EmailJS, and Tailwind CSS effectively.",
     description4:
       "This was a full-cycle development journey — from planning and layout to code reviews and deployment. I’m proud of the result and excited to keep evolving it as I grow.",
+  },
+  {
+    id: 8,
+    img: img8,
+    title: "Designing a Client Website with WIX: The ORA Holiday Project",
+    commentor: "Yakov Tome",
+    date: "28 March 2025",
+    tag: "wix, web design, client project, portfolio, ui/ux, freelancing",
+    description1:
+      "Helping a client bring their vision to life is always a rewarding experience. For this project, I designed and built a website using WIX for a client in the vacation rental space — all completely free of charge.",
+    description2:
+      "The goal was to provide them with a beautiful, functional, and user-friendly platform they could independently manage once the project was complete. WIX was the ideal choice thanks to its intuitive interface and built-in CMS capabilities.",
+    description3:
+      "This journey was a blend of creativity and strategy — from planning the structure and working on visual branding to understanding the client's needs and translating them into a seamless booking experience.",
+    description4:
+      "The site, called ORA Holiday Apartments, focuses on daily vacation rentals in Eilat. It's now fully live and managed independently by the client. You can check it out through my portfolio!",
   },
 ];
