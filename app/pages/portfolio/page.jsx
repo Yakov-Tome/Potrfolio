@@ -103,7 +103,7 @@ const Portfolio = () => {
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         url={url}
-        size="h-10/12 md:min-w-2xl md:h-11/12 lg:min-w-3xl lg:h-11/12 xl:min-w-4xl xl:h-11/12"
+        size="h-[90%] md:w-[600px] md:h-[92%] lg:w-[768px] lg:h-[92%] xl:w-[1024px] xl:h-[92%]"
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}

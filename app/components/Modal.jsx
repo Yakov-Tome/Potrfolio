@@ -2,7 +2,6 @@
 import { useEffect, useRef } from "react";
 import { FaCircle } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
-import { motion, AnimatePresence } from "framer-motion";
 import CustomCursorInline from "./CustomCursorInline";
 
 export default function Modal({ children, isOpen, onClose, url, size }) {
@@ -26,7 +25,7 @@ export default function Modal({ children, isOpen, onClose, url, size }) {
   };
 
   return (
-    <AnimatePresence>
+    <>
       {isOpen && (
         <dialog
           className="modal modal-open bg-black/80 backdrop-blur-md fixed top-0 left-0 w-full h-full z-[1000]"
@@ -34,14 +33,10 @@ export default function Modal({ children, isOpen, onClose, url, size }) {
           aria-modal="true"
           role="dialog"
         >
-          <CustomCursorInline /> {/* נכנס פנימה! */}
+          <CustomCursorInline />
           <ToastContainer />
-          <motion.div
-            className={`modal-box ${size || ""} rounded-lg overflow-auto max-h-[90vh] no-scrollbar`}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.3 }}
+          <div
+            className={`modal-box ${size || ""} rounded-lg overflow-auto max-h-[90vh] no-scrollbar transition-all duration-300 ease-in-out scale-100 opacity-100`}
           >
             <div className="pt-9 relative">
               <div className="absolute w-full top-0 left-0 p-2 flex gap-2">
@@ -56,7 +51,7 @@ export default function Modal({ children, isOpen, onClose, url, size }) {
               </div>
               {children}
             </div>
-          </motion.div>
+          </div>
           <form
             method="dialog"
             className="modal-backdrop bg-black/50 h-screen w-screen fixed top-0 left-0"
@@ -64,6 +59,6 @@ export default function Modal({ children, isOpen, onClose, url, size }) {
           ></form>
         </dialog>
       )}
-    </AnimatePresence>
+    </>
   );
 }

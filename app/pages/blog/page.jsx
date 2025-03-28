@@ -102,7 +102,7 @@ const Blog = () => {
           isOpen={isOpen}
           onClose={() => setIsOpen(false)}
           url={url}
-          size="xl:min-w-5xl xl:h-11/12 lg:min-w-4xl lg:h-11/12 md:min-w-3xl md:h-11/12 sm:min-w-2xl sm:h-11/12"
+          size="h-[90%] md:w-[600px] md:h-[92%] lg:w-[768px] lg:h-[92%] xl:w-[1024px] xl:h-[92%]"
         >
           <motion.div
             className="container mx-auto p-4"
