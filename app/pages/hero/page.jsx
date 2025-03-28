@@ -1,10 +1,9 @@
 "use client";
 
 import { FaArrowAltCircleRight } from "react-icons/fa";
-import Modal from "@/app/components/Modal.jsx";
 import { useState } from "react";
-import About from "../about/page.jsx";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 const heroContent = {
   heroTitleName: "Yakov Tome",
@@ -16,6 +15,7 @@ const heroContent = {
 
 const Hero = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
 
   return (
     <div className="flex flex-col lg:flex-row items-center justify-center lg:justify-end p-10">
@@ -87,7 +87,7 @@ const Hero = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => setIsOpen(true)}
+            onClick={() => router.push("/pages/about")}
             aria-label="Open modal with more information about me"
             className="mt-6 px-6 py-3 btn btn-warning w-full text-xl uppercase flex items-center justify-center gap-2 sm:mx-auto hover:scale-101"
             initial={{ opacity: 0, y: 20 }}
@@ -104,17 +104,6 @@ const Hero = () => {
           </motion.button>
         </div>
       </motion.div>
-
-      {/* Modal with About content */}
-      {isOpen && (
-        <Modal
-          size="xl:min-w-4xl xl:h-11/12 lg:min-w-3xl lg:h-11/12 md:min-w-2xl md:h-11/12 sm:min-w-xl h-11/12 min-w-lg"
-          isOpen={isOpen}
-          onClose={() => setIsOpen(false)}
-        >
-          <About />
-        </Modal>
-      )}
     </div>
   );
 };
