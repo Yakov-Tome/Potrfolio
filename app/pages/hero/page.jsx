@@ -43,7 +43,7 @@ const Hero = () => {
         initial={{ opacity: 0, x: 100 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 1 }}
-        className="w-[58%] flex items-center justify-center lg:justify-end lg:mt-60"
+        className="md:w-md lg:w-xl xl:w-3xl 2xl:w-4xl flex items-center justify-center lg:justify-end lg:mt-60"
       >
         <div className="transition-all duration-300 ease-in-out lg:mr-[20%] lg:text-left sm:justify-center sm:text-center bg-white/10 p-6 rounded-3xl shadow-lg min-w-sm text-center ">
           {/* Mobile image */}
