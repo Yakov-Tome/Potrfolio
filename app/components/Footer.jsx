@@ -11,7 +11,7 @@ const Footer = () => {
   return (
     <motion.footer
       role="contentinfo"
-      className="flex flex-col md:flex-row items-center justify-between px-6 py-4 gap-4 bg-white/10"
+      className="flex flex-col md:flex-row items-center gap-4 bg-white/10 pb-20 pt-2 md:justify-around md:pb-18 md:mt-10 lg:p-2 z-50"
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
@@ -23,8 +23,6 @@ const Footer = () => {
         transition={{ delay: 0.4, duration: 0.5 }}
       >
         <Image src={logo} alt="Yakov Tome Logo" className="w-40 h-auto" />
-
-        <p>© {new Date().getFullYear()} Yakov Tome. All rights reserved.</p>
       </motion.div>
 
       <motion.nav
@@ -34,6 +32,9 @@ const Footer = () => {
         transition={{ delay: 0.5, duration: 0.5 }}
         aria-label="Social media links"
       >
+        <p className="text-xs">
+          © {new Date().getFullYear()} Yakov Tome. All rights reserved.
+        </p>
         <SocialLink
           href="mailto:yakovtome@outlook.com"
           label="Email"

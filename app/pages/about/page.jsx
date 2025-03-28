@@ -64,7 +64,7 @@ const About = () => {
               className="mt-4"
             >
               <a
-                className="inline-flex items-center px-6 py-2 rounded-lg btn btn-primary  hover:scale-102 transition-transform duration-300 ease-in-out"
+                className="inline-flex items-center px-6 py-2 rounded-lg btn btn-primary hover:scale-102 transition-transform duration-300 ease-in-out"
                 href="/cv.pdf"
                 target="_blank"
                 rel="noopener noreferrer"

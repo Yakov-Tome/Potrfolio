@@ -35,7 +35,7 @@ const PersonalInfo = () => {
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true }}
-      className="flex flex-wrap text-xs sm:text-sm md:text-sm text-gray-400 rounded-lg shadow-md divide-y divide-gray-600 border border-white/50 min-w-sm"
+      className="flex flex-wrap text-xs sm:text-sm md:text-sm text-gray-400 rounded-lg shadow-md divide-y divide-gray-600 border border-white/50"
       aria-label="Personal information list"
     >
       {personalInfoContent.map((info, index) => (

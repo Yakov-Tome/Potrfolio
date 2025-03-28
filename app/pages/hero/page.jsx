@@ -18,7 +18,7 @@ const Hero = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="flex flex-col lg:flex-row items-center justify-center lg:justify-end h-screen overflow-hidden">
+    <div className="flex flex-col lg:flex-row items-center justify-center lg:justify-end p-10">
       {/* Left background image (visible on desktop only) */}
       <motion.div
         initial={{ opacity: 0, x: -100 }}
@@ -43,9 +43,9 @@ const Hero = () => {
         initial={{ opacity: 0, x: 100 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 1 }}
-        className="w-[58%] flex items-center justify-center lg:justify-end"
+        className="w-[58%] flex items-center justify-center lg:justify-end lg:mt-60"
       >
-        <div className="transition-all duration-300 ease-in-out lg:mr-[20%] lg:text-left sm:justify-center sm:text-center sm:mr-0 bg-white/10 p-6 rounded-3xl shadow-lg min-w-lg text-center">
+        <div className="transition-all duration-300 ease-in-out lg:mr-[20%] lg:text-left sm:justify-center sm:text-center bg-white/10 p-6 rounded-3xl shadow-lg min-w-sm text-center ">
           {/* Mobile image */}
           <motion.img
             initial={{ opacity: 0, scale: 0.8 }}
