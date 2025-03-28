@@ -103,7 +103,7 @@ const Portfolio = () => {
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         url={url}
-        size="min-w-xl h-10/12 md:min-w-2xl md:h-11/12 lg:min-w-3xl lg:h-11/12 xl:min-w-4xl xl:h-11/12"
+        size="h-10/12 md:min-w-2xl md:h-11/12 lg:min-w-3xl lg:h-11/12 xl:min-w-4xl xl:h-11/12"
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -121,8 +121,8 @@ const Portfolio = () => {
 
               {singleData?.modalDetails?.map((data, index) => (
                 <div key={index}>
-                  <section className="grid grid-cols-2 text-xs text-white gap-2 span bg-white/10 rounded-2xl p-4 mb-4">
-                    <div className="flex p-4 bg-black/10 rounded-2xl">
+                  <section className="block md:grid grid-cols-1 md:grid-cols-2 text-xs text-white gap-2 span bg-white/10 rounded-2xl p-4 mb-4">
+                    <div className="flex p-4 bg-black/10 rounded-2xl m-2">
                       <FaRegFileCode className="mr-2" />
                       <span>
                         Project:
@@ -132,17 +132,17 @@ const Portfolio = () => {
                       </span>
                     </div>
 
-                    <div className="flex p-4 bg-black/10 rounded-2xl">
+                    <div className="flex p-4 bg-black/10 rounded-2xl m-2">
                       <SlUser className="mr-2" />
                       <span>
                         Client:
-                        <span className="font-semibold uppercase ml-1">
+                        <span className="font-semibold uppercase ml-1 m-2">
                           {data.client}
                         </span>
                       </span>
                     </div>
 
-                    <div className="flex p-4 bg-black/10 rounded-2xl">
+                    <div className="flex p-4 bg-black/10 rounded-2xl m-2">
                       <PiProjectorScreenLight className="mr-2" />
                       <span>
                         Platform:
@@ -152,7 +152,7 @@ const Portfolio = () => {
                       </span>
                     </div>
 
-                    <div className="flex p-4 bg-black/10 rounded-2xl hover:scale-102 transition-transform hover:bg-yellow-400/10 duration-300 ease-in-out">
+                    <div className="flex p-4 bg-black/10 rounded-2xl hover:scale-102 transition-transform hover:bg-yellow-400/10 duration-300 ease-in-out m-2">
                       <GoLinkExternal className="mr-2" />
                       <span>
                         Preview:
