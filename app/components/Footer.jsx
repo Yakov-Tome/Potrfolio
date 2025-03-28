@@ -11,7 +11,7 @@ const Footer = () => {
   return (
     <motion.footer
       role="contentinfo"
-      className="flex flex-col md:flex-row items-center gap-4 bg-white/10 pb-20 pt-2 md:justify-around md:pb-18 md:mt-10 lg:p-2 z-50"
+      className="flex flex-col md:flex-row items-center gap-4 bg-white/10 pb-20 pt-2 md:justify-around md:pb-18 md:mt-10 lg:p-2 lg:z-50"
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
