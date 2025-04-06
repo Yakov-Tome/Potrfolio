@@ -26,6 +26,7 @@ const skillsContent = [
   { skillName: "Photoshop", avatar: "/svg/ps.svg" },
   { skillName: "React Query", avatar: "/svg/query.png" },
   { skillName: "EJS", avatar: "/svg/ejs.png" },
+  { skillName: "Redux", avatar: "/svg/Redux.svg" },
 ];
 
 // Animation settings
