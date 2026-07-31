@@ -1,4 +1,5 @@
 import Button from "@/components/ui/Button";
+import Reveal from "@/components/motion/Reveal";
 import { site } from "@/lib/content";
 
 /**
@@ -21,7 +22,7 @@ export default function Contact({ t }) {
   return (
     <section id="contact" className="section">
       <div className="shell flex w-full flex-col gap-[var(--section-gap)]">
-        <div className="tint-card">
+        <Reveal className="tint-card">
           <div className="inner flex flex-col items-center gap-8 py-12 text-center">
             <h2 className="t-h2">{t.contact.title}</h2>
             <p className="t-body-big max-w-[600px]">{t.contact.lead}</p>
@@ -44,7 +45,7 @@ export default function Contact({ t }) {
               ))}
             </ul>
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   );

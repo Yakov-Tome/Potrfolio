@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Reveal from "@/components/motion/Reveal";
 import { projects } from "@/lib/content";
 
 /**
@@ -10,13 +11,15 @@ export default function Projects({ t }) {
   return (
     <section id="projects" className="section">
       <div className="shell flex w-full flex-col gap-[var(--section-gap)]">
-        <h2 className="t-h2 section-title">{t.projects.title}</h2>
+        <Reveal as="h2" className="t-h2 section-title">
+          {t.projects.title}
+        </Reveal>
 
         <ul className="m-0 flex list-none flex-col gap-6 p-0">
-          {projects.map((p) => {
+          {projects.map((p, i) => {
             const copy = t.projects.items[p.id];
             return (
-              <li key={p.id} className="tint-card">
+              <Reveal key={p.id} as="li" delay={i * 0.06} className="tint-card group">
                 <article className="inner grid gap-6 md:grid-cols-[minmax(0,420px)_1fr] md:items-center">
                   <div className="relative aspect-16/10 w-full overflow-hidden rounded-[16px] bg-gray-95">
                     <Image
@@ -24,7 +27,7 @@ export default function Projects({ t }) {
                       alt={copy.name}
                       fill
                       sizes="(max-width: 810px) 100vw, 420px"
-                      className="object-cover"
+                      className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
                     />
                   </div>
 
@@ -48,7 +51,7 @@ export default function Projects({ t }) {
                     </a>
                   </div>
                 </article>
-              </li>
+              </Reveal>
             );
           })}
         </ul>

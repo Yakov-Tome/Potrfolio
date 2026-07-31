@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Reveal from "@/components/motion/Reveal";
 import { experience, education, site } from "@/lib/content";
 
 /**
@@ -16,7 +17,7 @@ export default function Resume({ t }) {
       <div className="shell flex w-full flex-col gap-[var(--section-gap)]">
         <div className="grid gap-6 md:grid-cols-2">
           {/* Experience */}
-          <div className="tint-card">
+          <Reveal className="tint-card">
             <div className="inner flex flex-col gap-6">
               <h2 className="t-h3 font-medium text-black">{t.experience.title}</h2>
               <ol className="m-0 flex list-none flex-col gap-5 p-0">
@@ -33,11 +34,11 @@ export default function Resume({ t }) {
                 })}
               </ol>
             </div>
-          </div>
+          </Reveal>
 
           {/* Education + details */}
           <div className="flex flex-col gap-6">
-            <div className="tint-card">
+            <Reveal delay={0.08} className="tint-card">
               <div className="inner flex flex-col gap-6">
                 <h2 className="t-h3 font-medium text-black">{t.education.title}</h2>
                 <ol className="m-0 flex list-none flex-col gap-5 p-0">
@@ -72,9 +73,9 @@ export default function Resume({ t }) {
                   })}
                 </ol>
               </div>
-            </div>
+            </Reveal>
 
-            <div className="tint-card">
+            <Reveal delay={0.16} className="tint-card">
               <div className="inner flex flex-col gap-4">
                 <h2 className="t-h3 font-medium text-black">{t.info.title}</h2>
                 <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-6 gap-y-3">
@@ -87,7 +88,7 @@ export default function Resume({ t }) {
                   <Row k={t.info.freelance} v={t.info.freelanceValue} accent />
                 </dl>
               </div>
-            </div>
+            </Reveal>
           </div>
         </div>
       </div>

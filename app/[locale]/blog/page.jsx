@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getDictionary, LOCALES } from "@/lib/content";
+import Reveal from "@/components/motion/Reveal";
 import { blogs } from "@/lib/blogs";
 
 export function generateStaticParams() {
@@ -26,8 +27,8 @@ export default async function BlogIndex({ params }) {
         </header>
 
         <ul className="m-0 grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-2 lg:grid-cols-3">
-          {blogs.map((post) => (
-            <li key={post.id} className="tint-card">
+          {blogs.map((post, i) => (
+            <Reveal key={post.id} as="li" delay={(i % 3) * 0.08} className="tint-card group">
               <article className="inner flex h-full flex-col gap-4">
                 <div className="relative aspect-16/10 w-full overflow-hidden rounded-[16px] bg-gray-95">
                   <Image
@@ -35,7 +36,7 @@ export default async function BlogIndex({ params }) {
                     alt={post.title}
                     fill
                     sizes="(max-width: 810px) 100vw, (max-width: 1200px) 50vw, 360px"
-                    className="object-cover"
+                    className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
                   />
                 </div>
                 <p className="t-span text-gray-50">
@@ -50,7 +51,7 @@ export default async function BlogIndex({ params }) {
                   {t.blog.readMore}
                 </Link>
               </article>
-            </li>
+            </Reveal>
           ))}
         </ul>
       </div>

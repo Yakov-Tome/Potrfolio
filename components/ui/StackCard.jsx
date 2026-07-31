@@ -2,27 +2,32 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { motion, useReducedMotion } from "framer-motion";
 
 /**
  * The Framer "Stack Card" is a flip card: a 48px-radius tinted shell around a
- * white 24px card, with a logo face and a description face, and a "Tap to flip"
- * hint at the bottom. Both faces exist in the component; the variants only
- * differ by which one is opaque.
+ * white 24px card, a logo face and a description face, and a "Tap to flip" hint
+ * at the bottom. Both faces exist in the component; its four variants differ
+ * only by which face is opaque.
  *
- * Implemented as a button so it is reachable by keyboard, which the design's
- * tap-only interaction is not.
+ * Rendered as a button so it is reachable by keyboard — the design's tap-only
+ * interaction is not.
  */
 export default function StackCard({ skill, description, flipLabel, flipBackLabel }) {
   const [flipped, setFlipped] = useState(false);
+  const reduce = useReducedMotion();
 
   return (
-    <button
+    <motion.button
       type="button"
       className="flip w-full cursor-pointer border-0 bg-transparent p-0 text-start"
       data-flipped={flipped}
       onClick={() => setFlipped((v) => !v)}
       aria-pressed={flipped}
       aria-label={skill.name}
+      whileHover={reduce ? undefined : { y: -6 }}
+      whileTap={reduce ? undefined : { scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
     >
       <span className="flip-inner block">
         <span className="flip-face front tint-card block">
@@ -41,6 +46,6 @@ export default function StackCard({ skill, description, flipLabel, flipBackLabel
           </span>
         </span>
       </span>
-    </button>
+    </motion.button>
   );
 }

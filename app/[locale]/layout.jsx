@@ -2,6 +2,7 @@ import { Public_Sans, Assistant } from "next/font/google";
 import { LOCALES, getDictionary, isRtl, site } from "@/lib/content";
 import Nav from "@/components/ui/Nav";
 import Footer from "@/components/ui/Footer";
+import SmoothScroll from "@/components/motion/SmoothScroll";
 import "@/app/styles/globals.css";
 
 // Public Sans is the design's typeface but has no Hebrew glyphs, so Assistant
@@ -49,6 +50,7 @@ export default async function LocaleLayout({ children, params }) {
   return (
     <html lang={locale} dir={dir} className={`${publicSans.variable} ${assistant.variable}`}>
       <body>
+        <SmoothScroll />
         <Nav locale={locale} t={t} />
         <main>{children}</main>
         <Footer locale={locale} t={t} />
