@@ -4,6 +4,7 @@ import { useRef } from "react";
 import Image from "next/image";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import Button from "@/components/ui/Button";
+import ProfilePhoto from "@/components/ui/ProfilePhoto";
 
 /**
  * Hero, laid out from the Framer "Top Section" and moving the way the published
@@ -157,12 +158,11 @@ function Profile({ t, progress, reduce }) {
       </div>
 
       <motion.div
-        className="relative h-[280px] w-[280px] overflow-hidden rounded-full bg-gray-95"
         initial={reduce ? false : { opacity: 0, scale: 0.92 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.9, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
       >
-        <Image src="/mobile.jpg" alt={t.hero.greeting} fill sizes="280px" className="object-cover" priority />
+        <ProfilePhoto alt={t.hero.greeting} ringText={t.hero.photoRing} />
       </motion.div>
 
       <motion.div

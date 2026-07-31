@@ -151,18 +151,34 @@ html[dir="rtl"] body {
 
 /* ---------------------------------------------------------------- cards */
 
-/* The Framer "Stack Card": a 48px-radius tinted shell holding a white 24px
-   card, with 24px of padding at both levels. */
+/* A 48px-radius tinted shell holding a white 24px card. Verified identical on
+   the About, Stack and Pricing cards: shell padding 24px, radius 48px, fill
+   rgba(102,112,255,0.05) — and `backdrop-filter: blur(5px)`, which the rebuild
+   was missing everywhere.
+   That blur is most of why the original reads as glass rather than as flat
+   panels: 48 elements in the reference carry a backdrop-filter, and with the
+   3D renders drifting behind them the 24px tinted ring around each white card
+   is where that shows. Cheap to add, and invisible by its absence. */
 .tint-card {
   border-radius: var(--radius-card);
   background: var(--tint);
   padding: 24px;
+  /* Standard property only. Writing the -webkit- alias alongside it made
+     Lightning CSS collapse the pair and keep ONLY the prefixed one, dropping
+     the standard property — so prefixing is left to the toolchain, which is
+     what it is for. Same class of silent rewrite as the linear() curve. */
+  backdrop-filter: blur(5px);
 }
 .tint-card > .inner {
   border-radius: var(--radius-inner);
   background: var(--color-white);
   padding: 24px;
   height: 100%;
+}
+/* The inner padding is the one value that is NOT shared: measured 48px on the
+   About cards, 24px on Stack, 0 on Pricing. */
+.tint-card.roomy > .inner {
+  padding: 48px;
 }
 
 /* --------------------------------------------------------------- button */
@@ -191,6 +207,14 @@ html[dir="rtl"] body {
   /* blue-70 at 10%, i.e. the node's rgba(102, 112, 255, 0.1), written out so
      this rule does not depend on a Tailwind colour function inside plain CSS. */
   background: rgba(102, 112, 255, 0.1);
+  /* The halo is frosted too — the reference's button computes to blur(5px),
+     same as the cards. Only visible where something passes behind it, which in
+     the hero is constantly. */
+  /* Standard property only. Writing the -webkit- alias alongside it made
+     Lightning CSS collapse the pair and keep ONLY the prefixed one, dropping
+     the standard property — so prefixing is left to the toolchain, which is
+     what it is for. Same class of silent rewrite as the linear() curve. */
+  backdrop-filter: blur(5px);
   overflow: hidden;
   text-decoration: none;
 }
@@ -244,6 +268,74 @@ html[dir="rtl"] .btn-pill {
      disc parks beyond the correct edge without waiting for JS. Once mounted,
      framer-motion drives the same transform inline. */
   transform: translateX(var(--btn-icon-out)) rotate(180deg);
+}
+
+/* -------------------------------------------------------- profile photo */
+
+/* Geometry from the "Profile Photo" node; the turn itself lives in
+   ProfilePhoto.jsx because it is an effect, not a variant. */
+.profile-card {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  perspective: 1600px;
+  outline-offset: 8px;
+}
+.profile-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 48px;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+.profile-front {
+  /* blue-70, the node's fill behind the portrait. */
+  background: var(--color-blue-70);
+}
+.profile-back {
+  background: var(--color-white);
+  display: grid;
+  place-items: center;
+}
+.profile-circle {
+  position: absolute;
+  border: 1px solid var(--color-black);
+  border-radius: 120px;
+}
+.profile-circle-big { width: 165px; height: 165px; }
+.profile-circle-small { width: 96px; height: 96px; }
+
+/* The Arc component: `rotate:true`, `animateDuration:20`. Measured on the
+   reference at 100.3deg per 5566ms, i.e. one turn in 19.98s — so 20s exactly,
+   clockwise. */
+.profile-ring {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  animation: profile-ring-spin 20s linear infinite;
+}
+.profile-ring text {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  fill: var(--color-black);
+}
+@keyframes profile-ring-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.profile-arrow {
+  position: absolute;
+  top: 104px;
+  width: 48px;
+  height: 60px;
+  color: var(--color-black);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-ring { animation: none; }
 }
 
 /* ------------------------------------------------------------ flip card */

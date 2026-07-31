@@ -15,7 +15,13 @@ export default function Nav({ locale, t }) {
   ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-95 bg-white/85 backdrop-blur-md">
+    // Glass, not a white bar. The reference's nav computes to
+    // `backdrop-filter: blur(10px)` over `background: rgba(255,255,255,0)` with
+    // no border and no shadow, and it is identical at every scroll depth —
+    // there is no scrolled state, the effect is simply the page blurring
+    // through it as it passes underneath. This was `bg-white/85` with a border,
+    // which is opaque enough that nothing legible moves behind it.
+    <header className="sticky top-0 z-50 backdrop-blur-[10px]">
       <nav className="shell flex h-16 items-center gap-6">
         <Link href={`/${locale}`} className="t-h4 !text-[20px] font-medium text-black no-underline">
           {site.name}
