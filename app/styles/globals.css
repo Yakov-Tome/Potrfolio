@@ -54,7 +54,13 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  /* No `scroll-behavior: smooth` here, and this is load-bearing. Lenis drives
+     the page by calling scrollTo every frame; with native smooth scrolling on,
+     each of those per-frame calls starts its own easing animation, so the
+     browser is constantly re-animating toward a target Lenis has already moved.
+     The result is the stutter this file used to cause. Lenis 1.3 neither
+     overrides this property in its stylesheet nor clears it in JS, so leaving
+     it set is an unmitigated conflict rather than a redundant declaration. */
   /* The design is light-only; saying so stops the browser tinting form controls. */
   color-scheme: light;
 }
@@ -157,6 +163,87 @@ html[dir="rtl"] body {
   background: var(--color-white);
   padding: 24px;
   height: 100%;
+}
+
+/* --------------------------------------------------------------- button */
+
+/* The Framer "Button" component, transcribed from its node tree and then
+   confirmed against the running reference — every number here was read, none
+   estimated:
+     outer   342x84 · r96px · pad 6px · fill blue-70/10 · overflow:hidden
+     stack   330x72 · r48px · fill white · pad 24px 48px
+     icon     72x72 · r48px · fill black · inset-inline-end -78px · rotate 180
+     glyph    36x36 · white
+   On hover exactly two things move, and no colour changes at all:
+     stack padding-inline-end  48px -> 99px   (button widens 341.5 -> 392.5)
+     icon                      -78px -> 0     and rotate 180deg -> 0deg
+   so the black disc appears to be drawn in from beyond the pill's edge while
+   un-rotating, clipped by the outer overflow. Measured rotation over time —
+   180 / 143 / 75 / 32 / 12 / 2 / 0 degrees at 20/60/120/200/300/450/700ms —
+   which is ~700ms on a hard ease-out with no overshoot. */
+
+.btn-pill {
+  --btn-icon-out: 78px;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px;
+  border-radius: 96px;
+  /* blue-70 at 10%, i.e. the node's rgba(102, 112, 255, 0.1), written out so
+     this rule does not depend on a Tailwind colour function inside plain CSS. */
+  background: rgba(102, 112, 255, 0.1);
+  overflow: hidden;
+  text-decoration: none;
+}
+html[dir="rtl"] .btn-pill {
+  /* The icon parks beyond the inline-end edge, which is the left one in RTL. */
+  --btn-icon-out: -78px;
+}
+
+.btn-pill-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 72px;
+  border-radius: 48px;
+  background: var(--color-white);
+  /* Authored as `24px 48px`. The block half is inert against the fixed 72px
+     height — kept so this reads as the node does. */
+  /* Resting padding only. The hover change is animated in Button.jsx: the
+     reference springs rather than eases, and a CSS `transition` here would run
+     a second, competing animation over the values framer-motion is already
+     setting inline. */
+  padding: 24px 48px;
+}
+
+.btn-pill-label {
+  color: var(--color-black);
+  white-space: nowrap;
+  /* Read off the reference: 24px / 700 / 1.4em. The Framer text node is
+     type:MIXED so the plugin API withholds it, and the generic body class this
+     used to borrow rendered 18px at weight 400 — which is what made the button
+     look undersized next to the original. */
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.4em;
+}
+
+.btn-pill-icon {
+  position: absolute;
+  inset-inline-end: 0;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin-top: -36px;
+  border-radius: 48px;
+  background: var(--color-black);
+  color: var(--color-white);
+  /* The resting state, and the only place the direction is expressed
+     declaratively — this is what paints before hydration, so on an RTL page the
+     disc parks beyond the correct edge without waiting for JS. Once mounted,
+     framer-motion drives the same transform inline. */
+  transform: translateX(var(--btn-icon-out)) rotate(180deg);
 }
 
 /* ------------------------------------------------------------ flip card */

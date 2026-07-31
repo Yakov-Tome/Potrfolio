@@ -16,28 +16,54 @@ import Button from "@/components/ui/Button";
  * On Phone each halves to 140px and regroups, and the ticker is hidden.
  *
  * Motion comes from measuring cohesion.framer.ai, because Framer's plugin API
- * exposes no effect parameters — the Scroll Section frames are empty of them.
- * Reading the live transforms at three scroll depths gave:
- *   Orange Pyramid  translateY  +3.8 → -149 → -351   scale 1 → 0.8
- *   Purple Sphere              -131 → -334 → -582    scale 1 → 0.8
- *   Yellow Cube                  +3.8 → -229 → -531  scale 1 → 0.8
- * which is a steady extra rise of 0.40 / 0.50 / 0.60 of the scroll distance —
- * different rates per element, i.e. depth layering, not one parallax speed.
+ * exposes no effect parameters at all — the Scroll Section frames carry none,
+ * and there is no image export to fall back on. The numbers below were read off
+ * the running reference (see /root/measure), sampling each render's bounding-box
+ * CENTRE rather than its top: a box shrinking from 280 to 224 moves its own top
+ * down 28px without having moved, so top-derived rates are wrong by that much.
+ *
+ * Three things came out of that, and the third is the one this file used to miss.
+ *
+ * 1. The hero is NOT pinned. Its heading tracks scroll exactly 1:1 (306 → 206 →
+ *    106 → 6 → -94 per 100px), so the 200vh "Hero Scroll Section" in the Framer
+ *    tree is an absolutely-positioned overflow clip, not a scroll track. The
+ *    section stays one viewport tall.
+ *
+ * 2. Parallax is linear, with the rate set by the render's vertical band —
+ *    0.40 top, 0.50 middle, 0.60 bottom. Extra rise beyond 1:1 scroll, measured:
+ *      scroll  150  300  450  600  750  900 1050 1200
+ *      0.40 →   66  130  184  238  304  370  426  480
+ *      0.50 →   74  142  221  303  371  442  524  600
+ *      0.60 →   96  190  274  358  454  550  636  720
+ *    Dead straight, so no easing is applied to the parallax itself.
+ *
+ * 3. The renders ENTER. They mount at scale 0.8 and grow to 1.0 over ~600ms,
+ *    all six together with no stagger and no fade — opacity is 1 in the very
+ *    first frame sampled. Scrolling then takes them back down to 0.8, where
+ *    they stay. 0.8 is both the entry state and the parked state, which is why
+ *    the entrance and the scroll shrink compose so cleanly.
  */
 
+// rate: parallax, as a fraction of scroll distance (measured, see above).
+// shrinkAt: scroll depth in px by which the scroll-linked shrink to 0.8 has
+// finished. The reference completes the top band earlier than the rest — those
+// renders leave the viewport first — so this is per-band, not global.
 const ELEMENTS = [
-  { src: "/3d/orange-pyramid.png", rate: 0.4, rotate: 10, z: 1, mobile: "top-5 end-0", desktop: "md:top-0 md:start-20 md:end-auto" },
-  { src: "/3d/purple-sphere.png", rate: 0.5, rotate: 0, z: 2, mobile: "-top-5 start-1/2 -translate-x-1/2", desktop: "md:top-1/2 md:-translate-y-1/2 md:start-0 md:translate-x-0" },
-  { src: "/3d/blue-cylinder.png", rate: 0.45, rotate: -55, z: 1, mobile: "top-5 start-0", desktop: "md:top-auto md:bottom-0 md:start-20" },
-  { src: "/3d/turquoise-star.png", rate: 0.55, rotate: 0, z: 2, mobile: "-bottom-5 end-0", desktop: "md:bottom-auto md:top-0 md:end-20" },
-  { src: "/3d/lime-green.png", rate: 0.5, rotate: 0, z: 1, mobile: "-bottom-15 start-1/2 -translate-x-1/2", desktop: "md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:end-0 md:start-auto md:translate-x-0" },
-  { src: "/3d/yellow-cube.png", rate: 0.6, rotate: 0, z: 2, mobile: "-bottom-5 start-0", desktop: "md:bottom-0 md:end-20 md:start-auto" },
+  { src: "/3d/orange-pyramid.png", rate: 0.4, shrinkAt: 300, rotate: 10, z: 1, mobile: "top-5 end-0", desktop: "md:top-0 md:start-20 md:end-auto" },
+  { src: "/3d/purple-sphere.png", rate: 0.5, shrinkAt: 450, rotate: 0, z: 2, mobile: "-top-5 start-1/2 -translate-x-1/2", desktop: "md:top-1/2 md:-translate-y-1/2 md:start-0 md:translate-x-0" },
+  { src: "/3d/blue-cylinder.png", rate: 0.6, shrinkAt: 450, rotate: -55, z: 1, mobile: "top-5 start-0", desktop: "md:top-auto md:bottom-0 md:start-20" },
+  { src: "/3d/turquoise-star.png", rate: 0.4, shrinkAt: 300, rotate: 0, z: 2, mobile: "-bottom-5 end-0", desktop: "md:bottom-auto md:top-0 md:end-20" },
+  { src: "/3d/lime-green.png", rate: 0.5, shrinkAt: 450, rotate: 0, z: 1, mobile: "-bottom-15 start-1/2 -translate-x-1/2", desktop: "md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:end-0 md:start-auto md:translate-x-0" },
+  { src: "/3d/yellow-cube.png", rate: 0.6, shrinkAt: 450, rotate: 0, z: 2, mobile: "-bottom-5 start-0", desktop: "md:bottom-0 md:end-20 md:start-auto" },
 ];
 
 export default function Hero({ t }) {
   const ref = useRef(null);
   const reduce = useReducedMotion();
+  // Section progress drives the profile and ticker; the renders want raw scroll
+  // pixels, because that is the unit their rates were measured in.
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const { scrollY } = useScroll();
 
   return (
     <section ref={ref} className="relative flex min-h-[100svh] items-center justify-center overflow-hidden">
@@ -47,7 +73,7 @@ export default function Hero({ t }) {
 
       <div className="decor absolute inset-0 md:inset-auto md:h-[700px] md:w-[1100px]" aria-hidden="true">
         {ELEMENTS.map((el) => (
-          <Decor key={el.src} el={el} progress={scrollYProgress} reduce={reduce} />
+          <Decor key={el.src} el={el} scrollY={scrollY} reduce={reduce} />
         ))}
       </div>
 
@@ -56,27 +82,40 @@ export default function Hero({ t }) {
   );
 }
 
-function Decor({ el, progress, reduce }) {
-  // The measured rise is a fraction of the scroll distance, and the section is
-  // one viewport tall, so the fraction is expressed in vh and the rotation the
-  // node authored is preserved through the whole move.
-  const y = useTransform(progress, [0, 1], ["0vh", `${-el.rate * 100}vh`]);
-  // The reference is already at 0.8 by ~400px of an 800px hero and holds there,
-  // so the shrink front-loads rather than running the full length of the pin —
-  // measured, not guessed: Orange Pyramid and Purple Sphere both read scale 0.8
-  // at y=400 and still 0.8 at y=900.
-  const scale = useTransform(progress, [0, 0.45, 1], [1, 0.8, 0.8]);
+function Decor({ el, scrollY, reduce }) {
+  // Raw scroll pixels, not a 0..1 section progress: every measured rate is a
+  // fraction of scroll DISTANCE, so expressing it in pixels is the measurement
+  // written down directly, and it stays correct at any viewport height.
+  const y = useTransform(scrollY, (v) => -el.rate * v);
+  const shrink = useTransform(scrollY, [0, el.shrinkAt], [1, 0.8], { clamp: true });
 
+  // Two scales, deliberately nested rather than combined. The entrance runs
+  // 0.8 → 1.0 on the outer element and the scroll shrink runs 1.0 → 0.8 on the
+  // inner one, so the product is 0.8 at first paint, 1.0 once settled and 0.8
+  // again once scrolled past — which is exactly the three values measured off
+  // the reference. Collapsing them into one value cannot express that, and a
+  // `style` MotionValue would silently win over an `animate` prop anyway.
   return (
     <motion.div
       className={`absolute h-[140px] w-[140px] md:h-[280px] md:w-[280px] ${el.mobile} ${el.desktop}`}
-      style={{
-        zIndex: el.z,
-        rotate: el.rotate,
-        ...(reduce ? {} : { y, scale }),
-      }}
+      style={{ zIndex: el.z }}
+      initial={reduce ? false : { scale: 0.8 }}
+      animate={{ scale: 1 }}
+      // ~600ms measured, all six together — the reference shows no stagger and
+      // no fade, opacity is already 1 in the first frame sampled. The 540ms the
+      // reference waits before starting is its hydration point, not an authored
+      // delay, so it is not copied; a short beat is enough to read as intentional.
+      transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
     >
-      <Image src={el.src} alt="" fill sizes="(max-width: 810px) 140px, 280px" className="object-contain" priority />
+      <motion.div
+        // `relative` is load-bearing: next/image with `fill` positions itself
+        // against the nearest positioned ancestor, and the entrance wrapper
+        // above is the one that used to provide it.
+        className="relative h-full w-full"
+        style={{ rotate: el.rotate, ...(reduce ? {} : { y, scale: shrink }) }}
+      >
+        <Image src={el.src} alt="" fill sizes="(max-width: 810px) 140px, 280px" className="object-contain" priority />
+      </motion.div>
     </motion.div>
   );
 }
