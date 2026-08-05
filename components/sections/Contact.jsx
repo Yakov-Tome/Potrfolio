@@ -22,7 +22,7 @@ export default function Contact({ t }) {
   return (
     <section id="contact" className="section">
       <div className="shell flex w-full flex-col gap-[var(--section-gap)]">
-        <Reveal className="tint-card">
+        <Reveal className="tint-card cap">
           <div className="inner flex flex-col items-center gap-8 py-12 text-center">
             <h2 className="t-h2">{t.contact.title}</h2>
             <p className="t-body-big max-w-[600px]">{t.contact.lead}</p>

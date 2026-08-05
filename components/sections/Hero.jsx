@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import Image from "next/image";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import Button from "@/components/ui/Button";
@@ -59,17 +58,15 @@ const ELEMENTS = [
 ];
 
 export default function Hero({ t }) {
-  const ref = useRef(null);
   const reduce = useReducedMotion();
-  // Section progress drives the profile and ticker; the renders want raw scroll
-  // pixels, because that is the unit their rates were measured in.
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  // The renders want raw scroll pixels, because that is the unit their rates
+  // were measured in. Nothing else in this section is scroll-linked.
   const { scrollY } = useScroll();
 
   return (
-    <section ref={ref} className="relative flex min-h-[100svh] items-center justify-center overflow-hidden">
+    <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden">
       <div className="decor absolute inset-x-0 top-1/2 hidden -translate-y-1/2 md:block" aria-hidden="true">
-        <Ticker text={t.hero.ticker} progress={scrollYProgress} reduce={reduce} />
+        <Ticker text={t.hero.ticker} />
       </div>
 
       <div className="decor absolute inset-0 md:inset-auto md:h-[700px] md:w-[1100px]" aria-hidden="true">
@@ -78,7 +75,7 @@ export default function Hero({ t }) {
         ))}
       </div>
 
-      <Profile t={t} progress={scrollYProgress} reduce={reduce} />
+      <Profile t={t} />
     </section>
   );
 }
@@ -121,75 +118,69 @@ function Decor({ el, scrollY, reduce }) {
   );
 }
 
-function Profile({ t, progress, reduce }) {
-  // The profile stack recedes as the renders rise past it, which is what stops
-  // the hero reading as a flat image that simply scrolls away.
-  const scale = useTransform(progress, [0, 1], [1, 0.92]);
-  const opacity = useTransform(progress, [0, 0.7, 1], [1, 1, 0]);
-
+/**
+ * The profile column does not animate. Not on load, and not on scroll.
+ *
+ * Sampled from before the document existed, the reference's heading, skills,
+ * photo and button are all at full size and opacity 1 in the first frame that
+ * has them (152ms) and never move again. Sampled against scroll, the photo runs
+ * 310 → 210 → 110 → 10 → -140 → -290 → -440 as the page goes 0 → 750, i.e.
+ * exactly 1:1, at a constant 280x280 and opacity 1. So the fade-up heading, the
+ * staggered chips and the recede-on-scroll here were all invented; only the six
+ * 3D renders enter, and only they parallax. Taking the invented motion out is
+ * what makes the six that remain read as deliberate.
+ *
+ * The spacing is the design's, and it is tighter than a uniform gap: from the
+ * node offsets and confirmed on the running page at 1440 —
+ *   heading 196→254 · skills 266→298 · photo 310→590 · button 674
+ * so 12px, 12px, then 24px. (The reference fills that last 24 with a "80+ Happy
+ * Clients" row and puts another 24 below it; with no such row the button simply
+ * takes the 24.)
+ */
+function Profile({ t }) {
   return (
-    <motion.div
-      className="relative z-10 flex flex-col items-center gap-6 px-4 text-center"
-      style={reduce ? {} : { scale, opacity }}
-    >
-      <motion.h1
-        className="t-h1"
-        initial={reduce ? false : { opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      >
-        {t.hero.greeting}
-      </motion.h1>
+    <div className="relative z-10 flex flex-col items-center gap-3 px-4 text-center">
+      <h1 className="t-h1">{t.hero.greeting}</h1>
 
       <div className="flex flex-wrap items-center justify-center gap-2">
         {[t.hero.role, ...t.hero.skillsTicker].map((s, i) => (
-          <motion.span
+          <span
             key={s}
             className={`t-span rounded-full px-3 py-1.5 ${
               i === 0 ? "bg-blue-70/10 text-blue-70" : "bg-gray-95 text-gray-30"
             }`}
-            initial={reduce ? false : { opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.15 + i * 0.07, ease: [0.16, 1, 0.3, 1] }}
           >
             {s}
-          </motion.span>
+          </span>
         ))}
       </div>
 
-      <motion.div
-        initial={reduce ? false : { opacity: 0, scale: 0.92 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.9, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <ProfilePhoto alt={t.hero.greeting} ringText={t.hero.photoRing} />
-      </motion.div>
+      <ProfilePhoto alt={t.hero.greeting} ringText={t.hero.photoRing} />
 
-      <motion.div
-        className="mt-6"
-        initial={reduce ? false : { opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
-      >
+      {/* 12px of column gap plus 12px here = the measured 24. */}
+      <div className="mt-3">
         <span className="hidden md:inline-block">
           <Button href="#contact">{t.hero.cta}</Button>
         </span>
         <span className="inline-block md:hidden">
           <Button href="#contact">{t.hero.ctaMobile}</Button>
         </span>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }
 
-// The marquee runs on its own, and drifts further with scroll so it does not
-// read as a static backdrop once the page starts moving.
-function Ticker({ text, progress, reduce }) {
+// The marquee runs on its own clock and on nothing else — the hero travels 1:1
+// with the scroll, so the extra scroll-linked drift this used to carry was a
+// second motion the reference does not have.
+//
+// 240px/900 to match the node: the "Hero Ticker" is 288px tall and bleeds past
+// the page gutter (r:-24px l:-24px), which is why it sits outside .shell.
+function Ticker({ text }) {
   const run = Array.from({ length: 6 }, () => text).join("");
-  const x = useTransform(progress, [0, 1], ["0%", "-8%"]);
 
   return (
-    <motion.div className="relative flex w-full overflow-hidden" style={reduce ? {} : { x }}>
+    <div className="relative flex w-full overflow-hidden">
       <div className="ticker-track flex shrink-0 whitespace-nowrap">
         <span className="px-2 text-[180px] font-bold leading-none text-gray-95">{run}</span>
         <span className="px-2 text-[180px] font-bold leading-none text-gray-95">{run}</span>
@@ -199,6 +190,6 @@ function Ticker({ text, progress, reduce }) {
         @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         @media (prefers-reduced-motion: reduce) { .ticker-track { animation: none; } }
       `}</style>
-    </motion.div>
+    </div>
   );
 }

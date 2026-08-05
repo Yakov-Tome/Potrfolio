@@ -4,57 +4,84 @@ import { useRef } from "react";
 import Image from "next/image";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import StackCard from "@/components/ui/StackCard";
-import Reveal from "@/components/motion/Reveal";
 import { skills } from "@/lib/content";
 import { skillCopy } from "@/lib/skill-copy";
 
 /**
- * Stack, from the Framer "Stack Section": a 3-column grid of flip cards with a
- * 720px render behind them, sticky at t:180px. On Phone the grid collapses to
- * one column, the gap tightens to 16px and the render is hidden outright.
+ * Stack, from the Framer "Stack Section": a 3-column grid capped at 1200px with
+ * a 24px gap, over a large render that stays put while the grid passes it. On
+ * Phone the grid collapses to one column, the gap tightens to 16px and the
+ * render is hidden outright.
  *
- * The render is sticky in the design, so it holds position while the cards
- * scroll past it and rotates slowly — that slow turn is what keeps a long grid
- * from feeling like a spreadsheet.
+ * The cards are the one place in this design where the entrance is CONTINUOUS
+ * rather than triggered. Measured on cohesion.framer.ai at 1440x900, a card's
+ * rendered width against its own distance from the viewport top:
+ *
+ *   card top   940+   852    786    720    654    566   460-
+ *   scale      0.800  0.840  0.870  0.900  0.930  0.970  1.000
+ *
+ * which is dead linear between top=940 and top=500 — no easing, and it tracks
+ * the scroll both ways rather than firing once. Expressed against the viewport
+ * that is 104% down to 56% of its height, which is what the offsets below say.
+ * A timed reveal cannot express it: the card would finish long before it lands.
  */
 export default function Stack({ t, locale }) {
-  const ref = useRef(null);
   const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-
-  const rotate = useTransform(scrollYProgress, [0, 1], [-12, 12]);
-  const y = useTransform(scrollYProgress, [0, 1], ["-6%", "6%"]);
 
   return (
-    <section ref={ref} id="stack" className="section relative overflow-hidden">
-      <motion.div
+    <section id="stack" className="section relative overflow-hidden">
+      {/* The render is parked, not animated. It measures 576px in the reference
+          against an authored 720 — i.e. it sits at the same 0.8 this design
+          parks everything at — and it neither rotates nor drifts at any scroll
+          depth. The rotation and vertical drift here before were invented.
+          (The Framer node is named "purple-cube"; the published build serves
+          the Turquoise Cube. The layer name is stale, the build is the product.) */}
+      <div
         aria-hidden="true"
-        className="decor pointer-events-none absolute start-1/2 top-[180px] hidden h-[720px] w-[720px] -translate-x-1/2 md:block"
-        style={reduce ? {} : { rotate, y }}
+        className="decor pointer-events-none absolute start-1/2 top-[180px] hidden h-[720px] w-[720px] -translate-x-1/2 scale-[0.8] md:block"
       >
-        <Image src="/3d/turquoise-cube.png" alt="" fill sizes="720px" className="object-contain opacity-90" />
-      </motion.div>
+        <Image src="/3d/turquoise-cube.png" alt="" fill sizes="720px" className="object-contain" />
+      </div>
 
       <div className="shell relative z-10 flex flex-col gap-[var(--section-gap)]">
-        <Reveal as="h2" className="t-h2 section-title">
-          {t.stack.title}
-        </Reveal>
+        <h2 className="t-h2 section-title">{t.stack.title}</h2>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
-          {skills.map((skill, i) => (
-            // Stagger runs across the row rather than the whole grid, so a card
-            // low in a 22-item list still animates promptly when it appears.
-            <Reveal key={skill.id} delay={(i % 3) * 0.08}>
+        <div className="cap grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
+          {skills.map((skill) => (
+            <ScrollScale key={skill.id} reduce={reduce}>
               <StackCard
                 skill={skill}
                 description={skillCopy[skill.id]?.[locale] ?? ""}
                 flipLabel={t.stack.flip}
                 flipBackLabel={t.stack.flipBack}
               />
-            </Reveal>
+            </ScrollScale>
           ))}
         </div>
       </div>
     </section>
+  );
+}
+
+/**
+ * Scale 0.8 -> 1.0 driven by the wrapper's own position in the viewport.
+ *
+ * `offset` reads as: progress 0 when this element's top meets the bottom of the
+ * viewport, progress 1 when its top reaches 56% of the viewport height. Those
+ * are the two ends of the measured ramp. The transform sits on a wrapper rather
+ * than on the card so the card keeps its own hover and flip transforms to
+ * itself — two animations on one element's transform is a fight, and the flip
+ * would win.
+ */
+function ScrollScale({ children, reduce }) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "start 56%"] });
+  const scale = useTransform(scrollYProgress, [0, 1], [0.8, 1], { clamp: true });
+
+  if (reduce) return <div>{children}</div>;
+  return (
+    <motion.div ref={ref} style={{ scale }}>
+      {children}
+    </motion.div>
   );
 }

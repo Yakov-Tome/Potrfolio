@@ -5,10 +5,20 @@
  * Framer has no node-to-image export, so none of this was measured off a
  * picture: every number below comes from a node.
  *
- * Note the type scale is authored largest-first: Framer's text styles carry a
- * base size at minWidth 0 and override it upward, so Heading 1 is 48px on a
- * phone, 32px from 810px, and 38px from 1200px. That is not a transcription
- * mistake — it is what the design says. */
+ * The type scale needs one warning. Framer writes a text style as a base value
+ * plus a `breakpoints` array labelled `minWidth: 1200` and `minWidth: 810`, and
+ * those labels are NOT min-widths in the CSS sense — they are UPPER bounds. An
+ * entry labelled 1200 applies in the band *below* 1200 (down to 810), the entry
+ * labelled 810 applies below 810, and the style's own base value applies above
+ * the largest label. So Heading 1, authored base 48 / 1200:38 / 810:32, is
+ * 48px on desktop and 32px on a phone — the ordinary way round.
+ *
+ * This file used to transcribe those labels literally, which inverted every
+ * responsive style: 48px headings and 20px body on a phone, 38px and 18px on a
+ * desktop. Both readings fit the canvas, so the canvas cannot settle it; the
+ * published build can. Measured on cohesion.framer.ai, Heading 3 renders 28px
+ * at 1440, 24px at 1000 and 20px at 390, and Body renders 20/18/16 — which only
+ * the upper-bound reading produces. */
 
 @theme {
   --color-white: rgb(255, 255, 255);
@@ -90,9 +100,10 @@ html[dir="rtl"] body {
   line-height: 1.2em;
   margin: 0;
 }
-.t-h1 { font-size: 48px; font-weight: 700; }
+/* Base = the phone band, below 810px. */
+.t-h1 { font-size: 32px; font-weight: 700; }
 .t-h2 { font-size: 38px; }
-.t-h3 { font-size: 28px; }
+.t-h3 { font-size: 20px; }
 .t-h4 { font-size: 24px; }
 
 .t-body,
@@ -104,20 +115,14 @@ html[dir="rtl"] body {
   line-height: 1.2em;
   margin: 0;
 }
-.t-body { font-size: 20px; }
-.t-body-big { font-size: 24px; }
-.t-body-small { font-size: 16px; }
+.t-body { font-size: 16px; }
+.t-body-big { font-size: 16px; }
+.t-body-small { font-size: 14px; }
+/* Span and Heading 2 carry no breakpoints at all — one size everywhere. */
 .t-span { font-size: 14px; font-weight: 500; line-height: 1.4em; }
 
+/* The tablet band, 810–1199. */
 @media (min-width: 810px) {
-  .t-h1 { font-size: 32px; }
-  .t-h3 { font-size: 20px; }
-  .t-body { font-size: 16px; }
-  .t-body-big { font-size: 16px; }
-  .t-body-small { font-size: 14px; }
-}
-
-@media (min-width: 1200px) {
   .t-h1 { font-size: 38px; }
   .t-h3 { font-size: 24px; }
   .t-body { font-size: 18px; }
@@ -125,13 +130,37 @@ html[dir="rtl"] body {
   .t-body-small { font-size: 16px; }
 }
 
+/* Desktop, 1200 and up — the style's own base value. */
+@media (min-width: 1200px) {
+  .t-h1 { font-size: 48px; }
+  .t-h3 { font-size: 28px; }
+  .t-body { font-size: 20px; }
+}
+
 /* --------------------------------------------------------------- layout */
 
+/* The page container is FLUID, and this is the design, not an oversight. The
+   Framer Desktop frame is 1200px wide, which reads like a max-width and is not:
+   a primary breakpoint is a *minimum*, and the published build stretches. At
+   1920 the reference's `main` measures 1920 wide with `padding: 0 24px` and
+   `max-width: none`, and its sections measure 1872. Capping this at 1200 left
+   the white panels and the 3D renders floating in a narrow column on a wide
+   screen, which is the single most visible way this rebuild diverged.
+
+   What the design does cap is content, one block at a time — see .cap below. */
 .shell {
   width: 100%;
-  max-width: 1200px;
   margin-inline: auto;
   padding-inline: var(--page-gutter);
+}
+
+/* The measured caps, each on the block that carries it rather than on the page:
+   1200 on the stack grid and the footer, 940 on the pricing row, 900 on an
+   About card. Anything not listed in the design runs full width. */
+.cap {
+  width: 100%;
+  max-width: var(--cap, 1200px);
+  margin-inline: auto;
 }
 
 .section {
@@ -144,9 +173,14 @@ html[dir="rtl"] body {
   background: var(--color-white);
 }
 
+/* Centred, not start-aligned. The Heading 2 *style* says `alignment: left`, so
+   transcribing the style got this wrong; the section headings override it. All
+   six in the published build are centred — "About Me" sits in a 1392px box with
+   its 173px of ink at x=633, i.e. dead centre — and a start-aligned heading over
+   a centred card stack is what made this page read as two different layouts. */
 .section-title {
   width: 100%;
-  text-align: start;
+  text-align: center;
 }
 
 /* ---------------------------------------------------------------- cards */

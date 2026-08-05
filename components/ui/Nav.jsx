@@ -21,8 +21,14 @@ export default function Nav({ locale, t }) {
     // there is no scrolled state, the effect is simply the page blurring
     // through it as it passes underneath. This was `bg-white/85` with a border,
     // which is opaque enough that nothing legible moves behind it.
-    <header className="sticky top-0 z-50 backdrop-blur-[10px]">
-      <nav className="shell flex h-16 items-center gap-6">
+    // Fixed and 72px tall, with the bar's 48px of content sitting under 24px of
+    // padding — the reference's <nav> measures 1440x72 with `padding: 24px 0 0`
+    // and `align-items: flex-end`. Fixed rather than sticky matters: a sticky
+    // bar occupies a row in the flow, which pushed the hero down by its own
+    // height and cost the hero its full viewport. The page now runs underneath
+    // it, which is the only reason the blur has anything to blur.
+    <header className="fixed inset-x-0 top-0 z-50 pt-6 backdrop-blur-[10px]">
+      <nav className="shell flex h-12 items-center gap-6">
         <Link href={`/${locale}`} className="t-h4 !text-[20px] font-medium text-black no-underline">
           {site.name}
         </Link>

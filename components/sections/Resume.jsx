@@ -15,7 +15,9 @@ export default function Resume({ t }) {
   return (
     <section id="resume" className="section">
       <div className="shell flex w-full flex-col gap-[var(--section-gap)]">
-        <div className="grid gap-6 md:grid-cols-2">
+        {/* Capped at the 1200 the design uses for its own widest content block;
+            the page container itself is fluid now. */}
+        <div className="cap grid gap-6 md:grid-cols-2">
           {/* Experience */}
           <Reveal className="tint-card">
             <div className="inner flex flex-col gap-6">

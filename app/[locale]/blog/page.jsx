@@ -21,12 +21,12 @@ export default async function BlogIndex({ params }) {
   return (
     <section className="section">
       <div className="shell flex w-full flex-col gap-[var(--section-gap)]">
-        <header className="flex flex-col gap-4">
+        <header className="cap flex flex-col gap-4">
           <h1 className="t-h2">{t.blog.title}</h1>
           <p className="t-body-big">{t.blog.lead}</p>
         </header>
 
-        <ul className="m-0 grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-2 lg:grid-cols-3">
+        <ul className="cap m-0 grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-2 lg:grid-cols-3">
           {blogs.map((post, i) => (
             <Reveal key={post.id} as="li" delay={(i % 3) * 0.08} className="tint-card group">
               <article className="inner flex h-full flex-col gap-4">
