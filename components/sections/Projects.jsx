@@ -30,7 +30,7 @@ export default function Projects({ t }) {
       <div className="shell flex w-full flex-col gap-[var(--section-gap)]">
         <h2 className="t-h2 section-title">{t.projects.title}</h2>
 
-        <ul className="cap m-0 grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-2" style={{ "--cap": "1248px" }}>
+        <ul className="cap m-0 grid list-none grid-cols-1 gap-6 p-0 [--cap:1248px] md:grid-cols-2">
           {projects.map((p) => {
             const copy = t.projects.items[p.id];
             return (

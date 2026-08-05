@@ -36,17 +36,23 @@ export default function Stack({ t, locale }) {
           depth. The rotation and vertical drift here before were invented.
           (The Framer node is named "purple-cube"; the published build serves
           the Turquoise Cube. The layer name is stale, the build is the product.) */}
+      {/* 600px in the 810-1199 band, 720 from 1200, hidden below 810 — the
+          Tablet frame steps this render down and the Phone frame turns it off. */}
       <div
         aria-hidden="true"
-        className="decor pointer-events-none absolute start-1/2 top-[180px] hidden h-[720px] w-[720px] -translate-x-1/2 scale-[0.8] md:block"
+        className="decor pointer-events-none absolute start-1/2 top-[180px] hidden h-[600px] w-[600px] -translate-x-1/2 scale-[0.8] md:block lg:h-[720px] lg:w-[720px]"
       >
-        <Image src="/3d/turquoise-cube.png" alt="" fill sizes="720px" className="object-contain" />
+        <Image src="/3d/turquoise-cube.png" alt="" fill sizes="(max-width: 1199px) 600px, 720px" className="object-contain" />
       </div>
 
       <div className="shell relative z-10 flex flex-col gap-[var(--section-gap)]">
         <h2 className="t-h2 section-title">{t.stack.title}</h2>
 
-        <div className="cap grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
+        {/* Three bands, and the middle one was missing: 1 column with a 16px gap
+            below 810; 2 columns capped at 810 with a 24px gap from 810 to 1199;
+            3 columns capped at 1200 with a 24px gap from 1200. Measured on the
+            build, the column tracks are 358 / 393 / 384 at 390 / 900 / 1440. */}
+        <div className="cap grid grid-cols-1 gap-4 md:[--cap:810px] md:grid-cols-2 md:gap-6 lg:[--cap:1200px] lg:grid-cols-3">
           {skills.map((skill) => (
             <ScrollScale key={skill.id} reduce={reduce}>
               <StackCard

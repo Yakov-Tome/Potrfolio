@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import Button from "@/components/ui/Button";
@@ -48,6 +49,12 @@ import ProfilePhoto from "@/components/ui/ProfilePhoto";
 // shrinkAt: scroll depth in px by which the scroll-linked shrink to 0.8 has
 // finished. The reference completes the top band earlier than the rest — those
 // renders leave the viewport first — so this is per-band, not global.
+// Size is a three-band step, and the middle band was missing entirely: measured
+// on the build, every render is 140px below 810, 200px from 810 to 1199 and
+// 280px from 1200. (The Orange Pyramid and Blue Cylinder measure larger — 324
+// and 390 at desktop — only because getBoundingClientRect returns the
+// axis-aligned box of a rotated element: 280*(cos10+sin10)=324.5 and
+// 280*(cos55+sin55)=390. All six are the same square.)
 const ELEMENTS = [
   { src: "/3d/orange-pyramid.png", rate: 0.4, shrinkAt: 300, rotate: 10, z: 1, mobile: "top-5 end-0", desktop: "md:top-0 md:start-20 md:end-auto" },
   { src: "/3d/purple-sphere.png", rate: 0.5, shrinkAt: 450, rotate: 0, z: 2, mobile: "-top-5 start-1/2 -translate-x-1/2", desktop: "md:top-1/2 md:-translate-y-1/2 md:start-0 md:translate-x-0" },
@@ -56,6 +63,8 @@ const ELEMENTS = [
   { src: "/3d/lime-green.png", rate: 0.5, shrinkAt: 450, rotate: 0, z: 1, mobile: "-bottom-15 start-1/2 -translate-x-1/2", desktop: "md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:end-0 md:start-auto md:translate-x-0" },
   { src: "/3d/yellow-cube.png", rate: 0.6, shrinkAt: 450, rotate: 0, z: 2, mobile: "-bottom-5 start-0", desktop: "md:bottom-0 md:end-20 md:start-auto" },
 ];
+
+const RENDER_BOX = "h-[140px] w-[140px] md:h-[200px] md:w-[200px] lg:h-[280px] lg:w-[280px]";
 
 export default function Hero({ t }) {
   const reduce = useReducedMotion();
@@ -69,7 +78,21 @@ export default function Hero({ t }) {
         <Ticker text={t.hero.ticker} />
       </div>
 
-      <div className="decor absolute inset-0 md:inset-auto md:h-[700px] md:w-[1100px]" aria-hidden="true">
+      {/* The stage the six renders are pinned inside, and it is not one box.
+          Measured: 1100x700 fixed from 1200px up; full container width by 720
+          tall in the 810-1199 band; full width by 700 tall below 810, centred
+          in the viewport rather than filling it — at 390x844 the stage runs
+          y 72..772, i.e. 72px of clearance top and bottom. This used to be
+          `inset-0` on phones, which spread the renders 144px further apart
+          than the design and pushed two of them off the visible area. */}
+      {/* The stage sits inside the page gutter, not against the viewport edge —
+          it is a child of Main, which carries the 16/24px padding, so it
+          measures 358 at 390 and 852 at 900. Running it edge to edge pushed
+          every rim render one gutter further out than the design. */}
+      <div
+        className="decor absolute inset-x-[var(--page-gutter)] top-1/2 h-[700px] -translate-y-1/2 md:h-[720px] lg:inset-x-auto lg:h-[700px] lg:w-[1100px]"
+        aria-hidden="true"
+      >
         {ELEMENTS.map((el) => (
           <Decor key={el.src} el={el} scrollY={scrollY} reduce={reduce} />
         ))}
@@ -95,7 +118,7 @@ function Decor({ el, scrollY, reduce }) {
   // `style` MotionValue would silently win over an `animate` prop anyway.
   return (
     <motion.div
-      className={`absolute h-[140px] w-[140px] md:h-[280px] md:w-[280px] ${el.mobile} ${el.desktop}`}
+      className={`absolute ${RENDER_BOX} ${el.mobile} ${el.desktop}`}
       style={{ zIndex: el.z }}
       initial={reduce ? false : { scale: 0.8 }}
       animate={{ scale: 1 }}
@@ -112,7 +135,14 @@ function Decor({ el, scrollY, reduce }) {
         className="relative h-full w-full"
         style={{ rotate: el.rotate, ...(reduce ? {} : { y, scale: shrink }) }}
       >
-        <Image src={el.src} alt="" fill sizes="(max-width: 810px) 140px, 280px" className="object-contain" priority />
+        <Image
+          src={el.src}
+          alt=""
+          fill
+          sizes="(max-width: 809px) 140px, (max-width: 1199px) 200px, 280px"
+          className="object-contain"
+          priority
+        />
       </motion.div>
     </motion.div>
   );
@@ -140,20 +170,17 @@ function Decor({ el, scrollY, reduce }) {
 function Profile({ t }) {
   return (
     <div className="relative z-10 flex flex-col items-center gap-3 px-4 text-center">
-      <h1 className="t-h1">{t.hero.greeting}</h1>
+      {/* Weight 500 with the name at 700 italic — the Framer node is type:MIXED
+          so the plugin withholds it, but the build renders the H1 at w500 with
+          a w700 span inside. `.t-h1` carries the style's own 700, so the base
+          is stepped back down here rather than in the shared class. */}
+      <h1 className="t-h1 hero-h1">
+        {t.hero.greetingLead}
+        <span className="hero-name">{t.hero.greetingName}</span>
+        {t.hero.greetingTail}
+      </h1>
 
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        {[t.hero.role, ...t.hero.skillsTicker].map((s, i) => (
-          <span
-            key={s}
-            className={`t-span rounded-full px-3 py-1.5 ${
-              i === 0 ? "bg-blue-70/10 text-blue-70" : "bg-gray-95 text-gray-30"
-            }`}
-          >
-            {s}
-          </span>
-        ))}
-      </div>
+      <SkillsTicker items={[t.hero.role, ...t.hero.skillsTicker]} />
 
       <ProfilePhoto alt={t.hero.greeting} ringText={t.hero.photoRing} />
 
@@ -170,20 +197,74 @@ function Profile({ t }) {
   );
 }
 
+/**
+ * The "Skills List": one line at a time in a 32px window, not a row of chips.
+ *
+ * Measured on the build — five items on a 32px pitch, the track sitting at
+ * -60, -92 and -124 (exactly 32 apart), each line held ~2.55s and then slid
+ * 32px over ~440ms, easing out. Period between slide starts, 3.05s.
+ *
+ * Rendered as a two-item window rather than a translated 5-item track so the
+ * DOM stays short and the wrap is free.
+ */
+function SkillsTicker({ items }) {
+  const reduce = useReducedMotion();
+  const [i, setI] = useState(0);
+
+  useEffect(() => {
+    if (reduce) return;
+    const id = setInterval(() => setI((v) => (v + 1) % items.length), 3050);
+    return () => clearInterval(id);
+  }, [items.length, reduce]);
+
+  if (reduce) {
+    return (
+      <div className="skills-clip">
+        <p className="t-body skills-item">{items[0]}</p>
+      </div>
+    );
+  }
+
+  // A translated track, exactly as the reference does it — one column of items
+  // on a 32px pitch sliding inside a 32px window. Not an AnimatePresence swap:
+  // that positions the outgoing item against the nearest positioned ancestor,
+  // which here is the hero section, so it escapes the clip entirely and lands
+  // on the page. Running back to the top at the end is the reference's own
+  // behaviour too — measured, it rewinds -124 to -16 in about 220ms.
+  return (
+    <div className="skills-clip">
+      <motion.div
+        animate={{ y: -i * 32 }}
+        transition={{ duration: i === 0 ? 0.22 : 0.44, ease: [0.16, 1, 0.3, 1] }}
+      >
+        {items.map((s) => (
+          <p key={s} className="t-body skills-item">
+            {s}
+          </p>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
 // The marquee runs on its own clock and on nothing else — the hero travels 1:1
 // with the scroll, so the extra scroll-linked drift this used to carry was a
 // second motion the reference does not have.
 //
-// 240px/900 to match the node: the "Hero Ticker" is 288px tall and bleeds past
-// the page gutter (r:-24px l:-24px), which is why it sits outside .shell.
+// The type is the correction that matters: the reference's marquee H1 is 240px
+// at weight 900 on a 288px line, in SOLID BLACK at opacity 1, running edge to
+// edge behind the profile. This was 180px/700 in gray-95 — a faint watermark
+// where the design has a black band, which is most of why the hero looked
+// emptier than the original. The node is 1200x288 and bleeds past the page
+// gutter (r:-24px l:-24px), which is why it sits outside .shell.
 function Ticker({ text }) {
   const run = Array.from({ length: 6 }, () => text).join("");
 
   return (
     <div className="relative flex w-full overflow-hidden">
       <div className="ticker-track flex shrink-0 whitespace-nowrap">
-        <span className="px-2 text-[180px] font-bold leading-none text-gray-95">{run}</span>
-        <span className="px-2 text-[180px] font-bold leading-none text-gray-95">{run}</span>
+        <span className="hero-ticker px-2">{run}</span>
+        <span className="hero-ticker px-2">{run}</span>
       </div>
       <style>{`
         .ticker-track { animation: ticker 40s linear infinite; }

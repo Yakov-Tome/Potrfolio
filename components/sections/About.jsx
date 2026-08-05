@@ -19,6 +19,10 @@ import { site } from "@/lib/content";
  * Each card scales down as the next one covers it, so the stack reads as depth
  * rather than as three slides that happen to overlap.
  */
+// The half viewport of travel the design leaves after the last card, expressed
+// in viewports. Used both for the spacer and for the progress arithmetic.
+const ABOUT_TAIL = 0.5;
+
 export default function About({ t }) {
   const ref = useRef(null);
   const reduce = useReducedMotion();
@@ -31,23 +35,34 @@ export default function About({ t }) {
   return (
     <section ref={ref} id="about" className="relative rounded-[24px] bg-white">
       <div className="sticky top-0 flex h-[100svh] flex-col items-center justify-start overflow-hidden py-[var(--section-pad)]">
+        {/* Three placements, one per band, straight off the frames:
+              Phone   cube  l:0 r:0 b:0, height 240 (stretched, not square)
+                      pyramid 240x240 at top:96, centred
+              Tablet  cube  l:48 r:48 b:-120, height 762 (stretched, hanging
+                            past the bottom edge)
+                      pyramid 240x240 at top:240, centred
+              Desktop cube  640x640 at l:120, centreY
+                      pyramid 640x640 at r:120, centreY, rotated 10
+            The rebuild ran the desktop placement from 810 up, so the whole
+            tablet band had two 640px renders where the design has one wide
+            hanging cube and one small centred pyramid. */}
         <Float period={4.8}>
           <motion.div
             aria-hidden="true"
-            className="decor absolute bottom-0 start-0 end-0 mx-auto h-[240px] w-[240px] md:inset-auto md:start-30 md:top-1/2 md:h-[640px] md:w-[640px] md:-translate-y-1/2"
+            className="decor absolute bottom-0 start-0 end-0 h-[240px] md:bottom-[-120px] md:start-12 md:end-12 md:h-[762px] lg:inset-auto lg:start-30 lg:top-1/2 lg:h-[640px] lg:w-[640px] lg:-translate-y-1/2"
             style={reduce ? {} : { y: cubeY }}
           >
-            <Image src="/3d/purple-cube.png" alt="" fill sizes="(max-width: 810px) 240px, 640px" className="object-contain" />
+            <Image src="/3d/purple-cube.png" alt="" fill sizes="(max-width: 1199px) 100vw, 640px" className="object-contain" />
           </motion.div>
         </Float>
 
         <Float period={5.6}>
           <motion.div
             aria-hidden="true"
-            className="decor absolute top-24 start-1/2 h-[240px] w-[240px] -translate-x-1/2 md:inset-auto md:end-30 md:top-1/2 md:h-[640px] md:w-[640px] md:translate-x-0 md:-translate-y-1/2"
+            className="decor absolute top-24 start-1/2 h-[240px] w-[240px] -translate-x-1/2 md:top-60 lg:inset-auto lg:end-30 lg:top-1/2 lg:h-[640px] lg:w-[640px] lg:translate-x-0 lg:-translate-y-1/2"
             style={reduce ? { rotate: 10 } : { y: pyramidY, rotate: pyramidRotate }}
           >
-            <Image src="/3d/blue-pyramid.png" alt="" fill sizes="(max-width: 810px) 240px, 640px" className="object-contain" />
+            <Image src="/3d/blue-pyramid.png" alt="" fill sizes="(max-width: 1199px) 240px, 640px" className="object-contain" />
           </motion.div>
         </Float>
 
@@ -72,6 +87,13 @@ export default function About({ t }) {
             reduce={reduce}
           />
         ))}
+        {/* The tail. The Framer About Section is 350vh with three 100vh cards,
+            not 300vh — measured on the build at every width, the section is
+            exactly 3.5 viewports (3150 at 900, 2954 at 844). The extra half
+            viewport is what lets the last card sit still and be read before
+            the next section arrives; without it the stack ends the instant the
+            third card lands. */}
+        <div className="h-[50svh]" aria-hidden="true" />
       </div>
     </section>
   );
@@ -112,9 +134,14 @@ function AboutCard({ text, index, count, progress, last, cvLabel, reduce }) {
   // A sticky element is pinned at the viewport top for as long as it is stuck,
   // so useScroll against the card itself reports 0 forever. The section's own
   // progress is the only thing that actually advances, and each card's covered
-  // range is a fixed slice of it: with n cards over n viewports, card i is
-  // covered between i/(n-1) and (i+1)/(n-1). The last card is never covered.
-  const span = 1 / Math.max(1, count - 1);
+  // range is a fixed slice of it.
+  //
+  // With n cards and a half-viewport tail the section is (n + 0.5) viewports,
+  // so the scrollable range is (n - 0.5) of them and one card's slot is
+  // 1/(n - 0.5) of the progress — 0.4 for three cards, not the 0.5 this used
+  // to assume. Getting it wrong made every card finish shrinking a fifth of a
+  // viewport before the next one actually landed on it.
+  const span = 1 / Math.max(1, count - 1 + ABOUT_TAIL);
   const from = index * span;
   const to = Math.min(1, (index + 1) * span);
 

@@ -137,6 +137,13 @@ html[dir="rtl"] body {
   .t-body { font-size: 20px; }
 }
 
+/* The hero heading is a type:MIXED node, so it does not simply take Heading 1:
+   the build renders it at weight 500 with the name in a 700 italic span. This
+   has to be a rule rather than a `font-medium` utility, because this file loads
+   after Tailwind and `.t-h1`'s own 700 would outrank the utility. */
+.t-h1.hero-h1 { font-weight: 500; }
+.hero-name { font-weight: 700; font-style: italic; }
+
 /* --------------------------------------------------------------- layout */
 
 /* The page container is FLUID, and this is the design, not an oversight. The
@@ -156,7 +163,10 @@ html[dir="rtl"] body {
 
 /* The measured caps, each on the block that carries it rather than on the page:
    1200 on the stack grid and the footer, 940 on the pricing row, 900 on an
-   About card. Anything not listed in the design runs full width. */
+   About card. Anything not listed in the design runs full width.
+   Overridden by setting --cap, never by a max-width utility: this file loads
+   after Tailwind, so `max-width` declared here would win over `md:max-w-[810px]`
+   and the responsive cap would silently do nothing. */
 .cap {
   width: 100%;
   max-width: var(--cap, 1200px);
@@ -209,10 +219,19 @@ html[dir="rtl"] body {
   padding: 24px;
   height: 100%;
 }
-/* The inner padding is the one value that is NOT shared: measured 48px on the
-   About cards, 24px on Stack, 0 on Pricing. */
+/* The inner padding is the one value that is NOT shared: 48px on an About card,
+   24px on Stack, 0 on Pricing — and the 48 is DESKTOP ONLY. The About Card
+   component has two variants, "Desktop" (inner pad 48) and "Mobile" (inner pad
+   24), and the Mobile one is the variant both the Tablet and the Phone frame
+   select. Measured on the build: inner padding is 48px at 1440 and 24px at
+   1000, 900 and 390. */
 .tint-card.roomy > .inner {
-  padding: 48px;
+  padding: 24px;
+}
+@media (min-width: 1200px) {
+  .tint-card.roomy > .inner {
+    padding: 48px;
+  }
 }
 
 /* --------------------------------------------------------------- button */
@@ -374,8 +393,17 @@ html[dir="rtl"] .btn-pill {
 
 /* ------------------------------------------------------------ flip card */
 
+/* The Stack card turns on the X axis, not the Y. Read off the reference at
+   rest, the description face computes to
+     matrix3d(1,0,0,0, 0,-1,0,0, 0,0,-1,0.002, 0,0,0,1)
+   with `backface-visibility: hidden`, and the logo face to the same matrix with
+   +1s and m34 = -0.002. m22 = m33 = -1 IS rotateX(180deg), and m34 = 0.002 is a
+   500px perspective applied on the element itself rather than on the parent
+   (the parent computes `transform: none`, `perspective: none`, `transform-style:
+   flat`). So the card tips away from you top-over-bottom.
+   That also means the axis is direction-neutral — the RTL special-casing a Y
+   flip needed is simply gone. */
 .flip {
-  perspective: 1600px;
   height: 360px;
 }
 @media (min-width: 810px) {
@@ -389,11 +417,7 @@ html[dir="rtl"] .btn-pill {
   transform-style: preserve-3d;
 }
 .flip[data-flipped="true"] .flip-inner {
-  transform: rotateY(180deg);
-}
-/* RTL flips the other way, so the motion still reads as "turning toward you". */
-html[dir="rtl"] .flip[data-flipped="true"] .flip-inner {
-  transform: rotateY(-180deg);
+  transform: perspective(500px) rotateX(180deg);
 }
 .flip-face {
   position: absolute;
@@ -402,15 +426,102 @@ html[dir="rtl"] .flip[data-flipped="true"] .flip-inner {
   -webkit-backface-visibility: hidden;
 }
 .flip-face.back {
-  transform: rotateY(180deg);
-}
-html[dir="rtl"] .flip-face.back {
-  transform: rotateY(-180deg);
+  transform: perspective(500px) rotateX(180deg);
 }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .flip-inner { transition: none; }
+}
+
+/* ------------------------------------------------------------------- nav */
+
+/* The reference's nav is not a bar with a logo — it is a centred white pill.
+   Measured at 1440:
+     <nav>       1440x72 · padding 24px 0 0 · flex · justify:center · align:end
+                 · gap 10px · backdrop-filter blur(10px) over rgba(255,255,255,0)
+     pill        501x48 · radius 24 · padding 3 · white
+                 · box-shadow rgba(0,0,0,.05) 0 5px 20px
+     link        padding 6px 18px · 14px/500 · rgb(77,77,77)
+     active      radius 96 · fill rgb(249,71,6) · white label
+   The active chip is 42px tall inside the 48px pill, i.e. the 3px padding on
+   each side. A second pill sits to its right in the same centred group. */
+/* No `display` here on purpose. This file is imported after Tailwind, so a
+   `display` declared on a component class outranks the `hidden` utility on the
+   same element — which is exactly how the desktop pill went on rendering next
+   to the phone menu button. Layout that a utility might need to override stays
+   in the markup. */
+.nav-pill {
+  align-items: center;
+  height: 48px;
+  gap: 0;
+  padding: 3px;
+  border-radius: 24px;
+  background: var(--color-white);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+}
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 18px;
+  border-radius: 96px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4em;
+  color: var(--color-gray-30);
+  text-decoration: none;
+  white-space: nowrap;
+  /* Colour only — the chip is painted by the shared layout element behind it,
+     so this must not animate a background of its own. */
+  transition: color 0.25s ease;
+}
+.nav-link[data-active="true"] {
+  color: var(--color-white);
+}
+.nav-link:not([data-active="true"]):hover {
+  color: var(--color-black);
+}
+/* The orange chip. It is one element that moves between links rather than one
+   background per link, which is what makes the reference's nav read as a
+   single object. */
+.nav-chip {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: 42px;
+  margin-top: -21px;
+  border-radius: 96px;
+  background: var(--color-orange-60);
+}
+
+/* ---------------------------------------------------------- hero ticker */
+
+/* Measured, and much heavier than it looks in a wireframe: the marquee H1 is
+   240px at weight 900 with a 288px line height, in SOLID BLACK at opacity 1,
+   running edge to edge behind the profile. The rebuild had it at 180px/700 in
+   gray-95, which is why the hero read as empty next to the original. */
+.hero-ticker {
+  font-size: 240px;
+  font-weight: 900;
+  line-height: 288px;
+  color: var(--color-black);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------ skills ticker */
+
+/* The "Skills List" is one line at a time in a 32px window, not a row of chips.
+   Measured: 5 items on a 32px pitch, each held ~2.55s and then slid 32px over
+   ~440ms — track offsets -60, -92, -124 are exactly 32 apart. */
+.skills-clip {
+  height: 32px;
+  overflow: hidden;
+}
+.skills-item {
+  display: flex;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
 }
 
 /* --------------------------------------------------------------- misc */

@@ -23,7 +23,10 @@ export default function LocaleSwitch({ locale, label }) {
     <Link
       href={segments.join("/") || `/${other}`}
       hrefLang={other}
-      className="t-span rounded-full border border-gray-70 px-4 py-2 text-black no-underline transition-colors hover:border-black hover:bg-black hover:text-white"
+      // Sits inside a .nav-pill now, so it is a nav link like the others rather
+      // than an outlined button of its own — the reference's second pill holds
+      // a plain label too.
+      className="nav-link"
     >
       {label}
     </Link>

@@ -5,13 +5,24 @@ import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 
 /**
- * The Framer "Stack Card" is a flip card: a 48px-radius tinted shell around a
- * white 24px card, a logo face and a description face, and a "Tap to flip" hint
- * at the bottom. Both faces exist in the component; its four variants differ
- * only by which face is opaque.
+ * The Framer "Stack Card": a 48px-radius tinted shell around a white 24px card,
+ * a logo face and a description face. Read from the component definition —
+ *   shell   r48 · pad 24 · rgba(102,112,255,.05)
+ *   inner   r24 · pad 24 · white · 1fr x 1fr, centred
+ *   logo    120x120, then the name at Heading 3, stacked with a 12px gap
+ *   hint    "Tap to flip" at 36px from the bottom, Span 14/500 gray-30 —
+ *           HIDDEN on the Desktop variant, visible on Mobile
  *
- * Rendered as a button so it is reachable by keyboard — the design's tap-only
- * interaction is not.
+ * The turn is on the X axis. At rest the reference's description face computes
+ * to matrix3d(1,0,0,0, 0,-1,0,0, 0,0,-1,0.002, 0,0,0,1) with backface-visibility
+ * hidden — m22 = m33 = -1 is rotateX(180deg), and m34 = 0.002 is a 500px
+ * perspective on the element itself. It was rebuilt here as a rotateY, which
+ * also needed an RTL special case; on the X axis that disappears.
+ *
+ * Kept as a click on a real <button>: neither hover nor click flips the card on
+ * the published build at 1440 (both were tried, and both did nothing), so the
+ * description face is simply unreachable there. An affordance that works with a
+ * keyboard is worth more than reproducing that.
  */
 export default function StackCard({ skill, description, flipLabel, flipBackLabel }) {
   const [flipped, setFlipped] = useState(false);

@@ -1,48 +1,159 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { site } from "@/lib/content";
+import { usePathname } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
 import LocaleSwitch from "./LocaleSwitch";
 
-// The Framer page has no persistent navbar — it is a single scrolling column.
-// A thin sticky bar is added here because the site has more than one page
-// (the blog) and two languages, and neither is reachable without it.
+/**
+ * The nav, rebuilt as the reference's centred pill rather than as a bar.
+ *
+ * There is no nav node anywhere in the Framer file — `getWebPages` is missing
+ * from this plugin build, so the bridge only sees the open canvas page and the
+ * nav lives on another one. Everything below is measured off the published
+ * build at 1440x900:
+ *
+ *   <nav>    1440x72 · padding 24px 0 0 · flex · justify:center · align:end
+ *            · gap 10px · backdrop-filter: blur(10px) over rgba(255,255,255,0)
+ *   pill     501x48 · radius 24 · padding 3 · white
+ *            · box-shadow rgba(0,0,0,.05) 0 5px 20px
+ *   link     padding 6px 18px · 14px/500 · rgb(77,77,77)
+ *   active   radius 96 · fill rgb(249,71,6) (Orange/60) · white label · 42px tall
+ *   a second pill sits to its right inside the same centred group
+ *
+ * The active chip is ONE element that moves between links — `layoutId` — not a
+ * background per link. That is what makes the reference's nav read as a single
+ * object rather than as five buttons.
+ *
+ * The bar is fixed and the page runs underneath it, which is the only reason
+ * the 10px blur has anything to blur.
+ */
 export default function Nav({ locale, t }) {
+  const pathname = usePathname();
+  const reduce = useReducedMotion();
+  const onBlog = pathname?.startsWith(`/${locale}/blog`);
+  const [active, setActive] = useState("home");
+  const [open, setOpen] = useState(false);
+
+  // Close the phone menu on navigation — a hash link does not remount this.
+  useEffect(() => setOpen(false), [pathname]);
+
   const links = [
-    { href: `/${locale}#about`, label: t.nav.about },
-    { href: `/${locale}#stack`, label: t.nav.stack },
-    { href: `/${locale}#projects`, label: t.nav.projects },
-    { href: `/${locale}/blog`, label: t.nav.blog },
-    { href: `/${locale}#contact`, label: t.nav.contact },
+    { id: "home", href: `/${locale}`, label: t.nav.home },
+    { id: "about", href: `/${locale}#about`, label: t.nav.about },
+    { id: "stack", href: `/${locale}#stack`, label: t.nav.stack },
+    { id: "projects", href: `/${locale}#projects`, label: t.nav.projects },
+    { id: "blog", href: `/${locale}/blog`, label: t.nav.blog },
+    { id: "contact", href: `/${locale}#contact`, label: t.nav.contact },
   ];
 
+  // The chip tracks the section under the middle of the viewport. An
+  // IntersectionObserver is the wrong tool here: these sections are up to 3.5
+  // viewports tall and several intersect at once, so "is it visible" cannot
+  // choose between them. Asking which one covers the midpoint always can.
+  useEffect(() => {
+    if (onBlog) return;
+    let frame = 0;
+    const pick = () => {
+      frame = 0;
+      const mid = window.scrollY + window.innerHeight / 2;
+      let found = "home";
+      for (const l of links) {
+        if (l.id === "home" || l.id === "blog") continue;
+        const el = document.getElementById(l.id);
+        if (!el) continue;
+        const top = el.getBoundingClientRect().top + window.scrollY;
+        if (mid >= top) found = l.id;
+      }
+      setActive(found);
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(pick);
+    };
+    pick();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onBlog, locale]);
+
+  const current = onBlog ? "blog" : active;
+
   return (
-    // Glass, not a white bar. The reference's nav computes to
-    // `backdrop-filter: blur(10px)` over `background: rgba(255,255,255,0)` with
-    // no border and no shadow, and it is identical at every scroll depth —
-    // there is no scrolled state, the effect is simply the page blurring
-    // through it as it passes underneath. This was `bg-white/85` with a border,
-    // which is opaque enough that nothing legible moves behind it.
-    // Fixed and 72px tall, with the bar's 48px of content sitting under 24px of
-    // padding — the reference's <nav> measures 1440x72 with `padding: 24px 0 0`
-    // and `align-items: flex-end`. Fixed rather than sticky matters: a sticky
-    // bar occupies a row in the flow, which pushed the hero down by its own
-    // height and cost the hero its full viewport. The page now runs underneath
-    // it, which is the only reason the blur has anything to blur.
-    <header className="fixed inset-x-0 top-0 z-50 pt-6 backdrop-blur-[10px]">
-      <nav className="shell flex h-12 items-center gap-6">
-        <Link href={`/${locale}`} className="t-h4 !text-[20px] font-medium text-black no-underline">
-          {site.name}
-        </Link>
-        <ul className="ms-auto hidden list-none items-center gap-6 p-0 md:flex">
-          {links.map((l) => (
-            <li key={l.href}>
-              <Link href={l.href} className="t-body-small link-underline text-gray-30 no-underline hover:text-black">
-                {l.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-        <div className="ms-auto md:ms-0">
+    // Two bars, because the design has two. Below 810 the reference's nav is
+    // 64px tall with `padding: 16px 16px 0`, carries NO backdrop-filter, and
+    // holds one thing: a 48x48 white pill at the inline end. From 810 up it is
+    // 72px with `padding: 24px 0 0`, blur(10px), and the centred pill group.
+    <header className="fixed inset-x-0 top-0 z-50 pt-4 md:pt-6 md:backdrop-blur-[10px]">
+      <nav className="flex items-center justify-end gap-[10px] px-4 md:justify-center md:px-[var(--page-gutter)]">
+        <div className="nav-pill hidden md:flex">
+          {links.map((l) => {
+            const isActive = l.id === current;
+            return (
+              <span key={l.id} className="relative inline-flex shrink-0">
+                {isActive && (
+                  <motion.span
+                    layoutId={reduce ? undefined : "nav-chip"}
+                    className="nav-chip"
+                    transition={{ type: "spring", stiffness: 570, damping: 41 }}
+                  />
+                )}
+                <Link href={l.href} data-active={isActive} className="nav-link relative">
+                  {l.label}
+                </Link>
+              </span>
+            );
+          })}
+        </div>
+
+        <div className="nav-pill hidden shrink-0 md:flex">
           <LocaleSwitch locale={locale} label={t.otherLocaleName} />
+        </div>
+
+        {/* The phone bar. The reference collapses to exactly this one 48x48
+            pill; what it opens was not measured, so the panel below stays in
+            the design's own language rather than inventing a new one. */}
+        <div className="relative md:hidden">
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls="nav-menu"
+            aria-label={t.nav.home}
+            onClick={() => setOpen((v) => !v)}
+            className="nav-pill flex h-12 w-12 cursor-pointer items-center justify-center border-0 p-0"
+          >
+            {/* Two bars, not three — that is what the reference's 48x48 pill
+                draws at 390. */}
+            <span className="flex h-[9px] w-[18px] flex-col justify-between">
+              <span className="block h-0.5 w-full rounded bg-black" />
+              <span className="block h-0.5 w-full rounded bg-black" />
+            </span>
+          </button>
+
+          {open && (
+            <div
+              id="nav-menu"
+              className="absolute end-0 top-14 flex min-w-[200px] flex-col gap-1 rounded-[24px] bg-white p-3 shadow-[0_5px_20px_rgba(0,0,0,0.05)]"
+            >
+              {links.map((l) => (
+                <Link
+                  key={l.id}
+                  href={l.href}
+                  data-active={l.id === current}
+                  onClick={() => setOpen(false)}
+                  className={`nav-link ${l.id === current ? "bg-orange-60" : ""}`}
+                >
+                  {l.label}
+                </Link>
+              ))}
+              <LocaleSwitch locale={locale} label={t.otherLocaleName} />
+            </div>
+          )}
         </div>
       </nav>
     </header>
