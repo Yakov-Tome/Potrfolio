@@ -349,10 +349,27 @@ html[dir="rtl"] .btn-pill {
 
 /* Geometry from the "Profile Photo" node; the turn itself lives in
    ProfilePhoto.jsx because it is an effect, not a variant. */
+/* The card has TWO resting states, and which one you get is a breakpoint, not a
+   preference. The Profile Photo component has a "Desktop" variant and a "Mobile"
+   variant, and the Framer file selects Mobile on BOTH the Tablet and the Phone
+   frame — so Desktop applies from 1200 up and Mobile everywhere below. Measured
+   on the build, that is exactly where it changes:
+     @1300, @1210   front 276x294 ry=10   back 280x280 ry=-180
+     @1199, @1000   front 280x280 ry=0    back 280x280 ry=0
+   Below 1200 it is a plain flat square — no tilt, no perspective, and hovering
+   it does nothing at all (checked: both faces stay at identity).
+
+   The resting geometry lives here rather than in the component so the first
+   paint is already right at both sizes; framer-motion then sets the same values
+   inline above 1200 and there is nothing to flash. */
 .profile-card {
   position: relative;
   width: 280px;
   height: 280px;
+  outline-offset: 8px;
+}
+
+@media (min-width: 1200px) {
   /* 500px, not 1600. Solved from the reference's own distortion: at rest the
      card is rotated 10deg about Y, and its projected box measures 276x294 for a
      280 square. A plane rotated by t under a perspective d has its near edge
@@ -360,8 +377,15 @@ html[dir="rtl"] .btn-pill {
      made that 284 — the card read almost flat where the original has real
      depth. It is also the same 500px the Stack card's matrix carries (m34 =
      0.002), so this is the design's one perspective value, used twice. */
-  perspective: 500px;
-  outline-offset: 8px;
+  .profile-card {
+    perspective: 500px;
+  }
+  .profile-front {
+    transform: rotateY(10deg);
+  }
+  .profile-back {
+    transform: rotateY(-180deg);
+  }
 }
 .profile-face {
   position: absolute;

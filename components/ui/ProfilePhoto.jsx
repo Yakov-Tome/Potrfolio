@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 /**
@@ -29,9 +30,36 @@ import { motion, useReducedMotion } from "framer-motion";
 export default function ProfilePhoto({ alt, ringText }) {
   const reduce = useReducedMotion();
 
+  // Above 1200 the card is a tilted, turnable object; below it, a flat photo
+  // and nothing more. That is the component's Desktop/Mobile variant split, and
+  // the Framer file puts Mobile on the Tablet frame as well as the Phone one —
+  // confirmed on the build, where the tilt is present at 1210 and gone at 1199,
+  // and where hovering below 1200 moves neither face.
+  const [turnable, setTurnable] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1200px)");
+    const sync = () => setTurnable(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   // 800ms measured. A spring would overshoot a half-turn in a way the reference
   // does not, so this is a plain ease.
   const turn = { duration: 0.8, ease: [0.22, 1, 0.36, 1] };
+
+  // The flat state. No back face at all — it is never reachable below 1200, so
+  // rendering it would only leave the text ring spinning where nobody can see
+  // it. The resting transform comes from the stylesheet, not from here.
+  if (!turnable) {
+    return (
+      <div className="profile-card" aria-label={alt}>
+        <div className="profile-face profile-front">
+          <Image src="/profile.png" alt={alt} width={560} height={840} priority className="profile-photo" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
