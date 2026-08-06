@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import Button from "@/components/ui/Button";
@@ -135,6 +135,56 @@ function Float({ period, children }) {
   );
 }
 
+/**
+ * "Read My CV", sliding out from behind the last card.
+ *
+ * Measured on the reference, the button's wrapper carries a scroll-linked
+ * translate and nothing else:
+ *   scrollY  2400  2600  2700  2800  2900  3000  3100  3150  3250  3400
+ *   ty         -3    50    77   104   131   157   184   197   198   198
+ * Dead linear at 0.268 per pixel of scroll, then clamped at 198. Against the
+ * About section's own progress — the section runs doc 900..4050, so scrollY
+ * 900..3150 is progress 0..1 — that is 0 at 0.672 and 198 at 1.0, and the
+ * midpoint checks out: progress 0.889 predicts 131 and 131 is what it reads.
+ *
+ * 198 is not an arbitrary distance. The card is 316 tall and the button 84, so
+ * (316 + 84) / 2 = 200: the travel is exactly enough to bring the button from
+ * concentric with the card to sitting directly beneath it. Measuring the card
+ * rather than hard-coding 198 keeps that true when the copy is a different
+ * length or the type resizes.
+ */
+function CvButton({ progress, cardRef, label, reduce }) {
+  const [travel, setTravel] = useState(200);
+
+  useEffect(() => {
+    const measure = () => {
+      const card = cardRef.current?.querySelector(".tint-card");
+      if (card) setTravel(Math.round((card.getBoundingClientRect().height + BUTTON_H) / 2));
+    };
+    measure();
+    if (document.fonts?.ready) document.fonts.ready.then(measure);
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [cardRef]);
+
+  const y = useTransform(progress, [0.672, 1], [0, travel], { clamp: true });
+
+  return (
+    <motion.div
+      className="absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2"
+      style={reduce ? { y: travel } : { y }}
+    >
+      <Button href={site.cv} icon="cv" external>
+        {label}
+      </Button>
+    </motion.div>
+  );
+}
+
+// The Button component is 84 tall at every breakpoint — outer 6px padding
+// around a 72px pill.
+const BUTTON_H = 84;
+
 function AboutCard({ text, index, count, progress, last, cvLabel, reduce }) {
   // A sticky element is pinned at the viewport top for as long as it is stuck,
   // so useScroll against the card itself reports 0 forever. The section's own
@@ -187,8 +237,16 @@ function AboutCard({ text, index, count, progress, last, cvLabel, reduce }) {
     // on main, keeping it here too indented the card twice — 28px instead of the
     // reference's 14 at 390.
     <div ref={cardRef} className="sticky top-0 flex h-[100svh] items-center justify-center">
+      {/* The CV button is a SIBLING of the card, centred in the slot and painted
+          BEHIND it — which is exactly how the Framer file has it: inside
+          "About Card-03" the Button is `pos:absolute cx:50% cy:50%` and comes
+          before the About Card in the node order. Putting it inside the card's
+          content, as this did, threw the whole effect away: there is nothing to
+          emerge from behind if it was never behind anything. */}
+      {last && <CvButton progress={progress} cardRef={cardRef} label={cvLabel} reduce={reduce} />}
+
       <motion.div
-        className="tint-card roomy w-full max-w-[900px]"
+        className="relative z-10 w-full max-w-[900px] tint-card roomy"
         style={reduce ? {} : { scale, rotate: tilt }}
         initial={reduce ? false : { opacity: 0, y: 28 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -197,11 +255,6 @@ function AboutCard({ text, index, count, progress, last, cvLabel, reduce }) {
       >
         <div className="inner flex flex-col items-center justify-center gap-6 text-center">
           <p className="t-body-big">{text}</p>
-          {last && (
-            <Button href={site.cv} icon="cv" external>
-              {cvLabel}
-            </Button>
-          )}
         </div>
       </motion.div>
     </div>
