@@ -280,10 +280,12 @@ function Clients({ clients }) {
           {avatars.map((src, i) => (
             <span
               key={src}
-              className="relative block h-9 w-9 overflow-hidden rounded-full bg-white p-[2px]"
+              // radius 96, not `rounded-full` — it is what the reference's own
+              // markup carries (`border-radius: 96px` inline on each avatar).
+              className="relative block h-9 w-9 overflow-hidden rounded-[96px] bg-white p-[2px]"
               style={i > 0 ? { marginInlineStart: -10 } : undefined}
             >
-              <Image src={src} alt="" width={32} height={32} className="h-8 w-8 rounded-full object-cover" />
+              <Image src={src} alt="" width={32} height={32} className="h-8 w-8 rounded-[96px] object-cover" />
             </span>
           ))}
         </div>
