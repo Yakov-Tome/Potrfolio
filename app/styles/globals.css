@@ -383,9 +383,13 @@ html[dir="rtl"] .btn-pill {
 /* The portrait is authored TALLER than its frame and clipped, not fitted: the
    reference's img element is 280x420 inside a 280x280 overflow-hidden face, so
    the bottom third never shows. `object-position: 47.9% 24.1%` is the framing
-   inside that element — measured, not chosen. Rendering it as a 280 square
-   instead centred the whole photo and left the face small in a field of
-   background, which is the asymmetry against the original. */
+   inside that element — measured, not chosen.
+   The asset is padded to that same 2:3 (1254x1881, the original square at the
+   top and black below) rather than the CSS being bent to fit a square source.
+   With the ratios matching, `cover` crops nothing, so the visible top 280 of
+   the 420 is exactly the whole original photo — head and shoulders, uncut —
+   while the design's geometry stays untouched. Padding with a square source
+   instead had the window land at the chin. */
 .profile-photo {
   position: absolute;
   inset-inline: 0;

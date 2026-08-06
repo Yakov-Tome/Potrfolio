@@ -237,6 +237,8 @@ function Profile({ t }) {
 
       <ProfilePhoto alt={t.hero.greeting} ringText={t.hero.photoRing} />
 
+      <Clients clients={t.hero.clients} />
+
       {/* 12px of column gap plus 12px here = the measured 24. */}
       <div className="mt-3">
         <span className="hidden md:inline-block">
@@ -246,6 +248,47 @@ function Profile({ t }) {
           <Button href="#contact">{t.hero.ctaMobile}</Button>
         </span>
       </div>
+    </div>
+  );
+}
+
+/**
+ * The clients row that sits between the portrait and the button.
+ *
+ * Measured on the reference at 1440x900, and it is what fills the gap this
+ * column was missing: photo bottom 590, row 220x36 at y614, button at y674 —
+ * so 24px below the photo and 24px above the button, which is exactly the
+ * rhythm already documented in Profile.
+ *   row       220x36 · flex row · gap 10
+ *   avatars   36x36 · radius 96 · white fill · overflow hidden, each holding a
+ *             32x32 image inset 2px, and each overlapping the one before by
+ *             ~10px (cluster measures 89 wide for three)
+ *   label     14px / 500 / rgb(77,77,77) — the Span style
+ *
+ * Renders nothing until `clients` exists. The label is a factual claim about
+ * the person whose site this is, so it is content, not decoration: it comes
+ * from the dictionary or it does not appear at all.
+ */
+function Clients({ clients }) {
+  if (!clients?.label) return null;
+  const avatars = clients.avatars ?? [];
+
+  return (
+    <div className="mt-3 flex items-center gap-[10px]">
+      {avatars.length > 0 && (
+        <div className="flex items-center">
+          {avatars.map((src, i) => (
+            <span
+              key={src}
+              className="relative block h-9 w-9 overflow-hidden rounded-full bg-white p-[2px]"
+              style={i > 0 ? { marginInlineStart: -10 } : undefined}
+            >
+              <Image src={src} alt="" width={32} height={32} className="h-8 w-8 rounded-full object-cover" />
+            </span>
+          ))}
+        </div>
+      )}
+      <span className="t-span">{clients.label}</span>
     </div>
   );
 }
@@ -312,6 +355,26 @@ function SkillsTicker({ items }) {
 // gutter (r:-24px l:-24px), which is why it sits outside .shell.
 function Ticker({ text }) {
   const run = Array.from({ length: 6 }, () => text).join("");
+  const trackRef = useRef(null);
+
+  // 60.8 px/s, measured on the reference by least squares over six seconds of
+  // frames. Ours ran at 253 — a fixed 40s for a translate of -50%, which is
+  // only a speed by accident: it depends on how wide the text happens to be, so
+  // the English and Hebrew marquees were running at different wrong speeds.
+  // Setting the duration from the measured track width fixes both, and holds
+  // after a font swap changes every glyph's width.
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    const set = () => {
+      const cycle = el.scrollWidth / 2; // one -50% pass
+      if (cycle > 0) el.style.animationDuration = `${cycle / 60.8}s`;
+    };
+    set();
+    if (document.fonts?.ready) document.fonts.ready.then(set);
+    window.addEventListener("resize", set);
+    return () => window.removeEventListener("resize", set);
+  }, [text]);
 
   // `dir="ltr"` on the marquee, and it is load-bearing rather than cosmetic. In
   // an RTL document the flex track lays out from the right edge and the
@@ -321,7 +384,7 @@ function Ticker({ text }) {
   // physical translate, so the box it moves has to be physical too.
   return (
     <div className="relative flex w-full overflow-hidden" dir="ltr">
-      <div className="ticker-track flex shrink-0 whitespace-nowrap">
+      <div ref={trackRef} className="ticker-track flex shrink-0 whitespace-nowrap">
         <span className="hero-ticker px-2">{run}</span>
         <span className="hero-ticker px-2">{run}</span>
       </div>
