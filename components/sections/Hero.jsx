@@ -222,25 +222,46 @@ function Decor({ el, scrollY, reduce }) {
  */
 function Profile({ t }) {
   return (
-    <div className="relative z-10 flex flex-col items-center gap-3 px-4 text-center">
-      {/* Weight 500 with the name at 700 italic — the Framer node is type:MIXED
-          so the plugin withholds it, but the build renders the H1 at w500 with
-          a w700 span inside. `.t-h1` carries the style's own 700, so the base
-          is stepped back down here rather than in the shared class. */}
-      <h1 className="t-h1 hero-h1">
-        {t.hero.greetingLead}
-        <span className="hero-name">{t.hero.greetingName}</span>
-        {t.hero.greetingTail}
-      </h1>
+    // The PHOTO is the anchor, not the column. In the Framer file the "Profile"
+    // frame IS the 280x280 portrait, pinned cx:50% cy:50%, and the heading,
+    // skills, clients row and button all hang off it at absolute offsets
+    // (t:-114, t:-44, b:-60, b:-168). Measured on the build at 1440x900 the
+    // photo sits 310..590 — centred on 450, which is also where the marquee band
+    // is centred, so the black type runs straight through the middle of the
+    // portrait.
+    //
+    // Laid out as a centred flex column instead, the whole stack gets centred
+    // and the photo rides high: the column spans 196..758, centre 477, so the
+    // photo lands ~27px above where the design puts it and the marquee crosses
+    // it near the bottom edge rather than through the middle. Anchoring the
+    // photo and hanging the rest off it is both what the file says and what
+    // keeps the two centres locked together at any heading length.
+    <div className="relative z-10 h-[280px] w-[280px]">
+      {/* Above the photo: skills 12px clear of it, heading 12px above the skills
+          — the node's t:-44 and t:-114 read as those two gaps once the heading's
+          own 58px height is taken out, and expressing them as gaps survives a
+          heading that wraps or a type step at a breakpoint. */}
+      <div className="absolute bottom-[calc(100%+12px)] left-1/2 flex w-[min(92vw,640px)] -translate-x-1/2 flex-col items-center gap-3 text-center">
+        {/* Weight 500 with the name at 700 italic — the Framer node is type:MIXED
+            so the plugin withholds it, but the build renders the H1 at w500 with
+            a w700 span inside. `.t-h1` carries the style's own 700, so the base
+            is stepped back down here rather than in the shared class. */}
+        <h1 className="t-h1 hero-h1">
+          {t.hero.greetingLead}
+          <span className="hero-name">{t.hero.greetingName}</span>
+          {t.hero.greetingTail}
+        </h1>
 
-      <SkillsTicker items={[t.hero.role, ...t.hero.skillsTicker]} />
+        <SkillsTicker items={[t.hero.role, ...t.hero.skillsTicker]} />
+      </div>
 
       <ProfilePhoto alt={t.hero.greeting} ringText={t.hero.photoRing} />
 
-      <Clients clients={t.hero.clients} />
-
-      {/* 12px of column gap plus 12px here = the measured 24. */}
-      <div className="mt-3">
+      {/* Below: clients 24px clear of the photo, button 24px below that — which
+          puts the button 84px under the photo, the node's b:-168 exactly. With
+          no clients row the button simply takes the 24. */}
+      <div className="absolute top-[calc(100%+24px)] left-1/2 flex w-[min(92vw,640px)] -translate-x-1/2 flex-col items-center gap-6">
+        <Clients clients={t.hero.clients} />
         <span className="hidden md:inline-block">
           <Button href="#contact">{t.hero.cta}</Button>
         </span>
@@ -274,7 +295,7 @@ function Clients({ clients }) {
   const avatars = clients.avatars ?? [];
 
   return (
-    <div className="mt-3 flex items-center gap-[10px]">
+    <div className="flex items-center gap-[10px]">
       {avatars.length > 0 && (
         <div className="flex items-center">
           {avatars.map((src, i) => (
