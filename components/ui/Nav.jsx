@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
@@ -35,6 +35,9 @@ export default function Nav({ locale, t }) {
   const onBlog = pathname?.startsWith(`/${locale}/blog`);
   const [active, setActive] = useState("home");
   const [open, setOpen] = useState(false);
+  const pillRef = useRef(null);
+  const linkRefs = useRef({});
+  const [chip, setChip] = useState({ x: 0, w: 0 });
 
   // Close the phone menu on navigation — a hash link does not remount this.
   useEffect(() => setOpen(false), [pathname]);
@@ -84,6 +87,25 @@ export default function Nav({ locale, t }) {
 
   const current = onBlog ? "blog" : active;
 
+  // Where the chip has to be. Measured from the link's own box inside the pill,
+  // so it is correct on first paint, after a font swap, after a resize and in
+  // either writing direction.
+  useEffect(() => {
+    const place = () => {
+      const el = linkRefs.current[current];
+      const pill = pillRef.current;
+      if (!el || !pill) return;
+      const e = el.getBoundingClientRect();
+      const p = pill.getBoundingClientRect();
+      setChip({ x: Math.round(e.left - p.left), w: Math.round(e.width) });
+    };
+    place();
+    // Web fonts land after hydration and change every label's width.
+    if (document.fonts?.ready) document.fonts.ready.then(place);
+    window.addEventListener("resize", place);
+    return () => window.removeEventListener("resize", place);
+  }, [current, t]);
+
   return (
     // Two bars, because the design has two. Below 810 the reference's nav is
     // 64px tall with `padding: 16px 16px 0`, carries NO backdrop-filter, and
@@ -91,22 +113,38 @@ export default function Nav({ locale, t }) {
     // 72px with `padding: 24px 0 0`, blur(10px), and the centred pill group.
     <header className="fixed inset-x-0 top-0 z-50 pt-4 md:pt-6 md:backdrop-blur-[10px]">
       <nav className="flex items-center justify-end gap-[10px] px-4 md:justify-center md:px-[var(--page-gutter)]">
-        <div className="nav-pill hidden md:flex">
+        <div ref={pillRef} className="nav-pill relative hidden md:flex">
+          {/* ONE chip, positioned from a measurement, not a shared-layout
+              animation. `layoutId` looked right until the target was Blog or
+              Contact, where the chip dropped in from above or below instead of
+              travelling along the bar: framer-motion projects layout in page
+              coordinates, and inside a `position: fixed` bar that adds the
+              current scroll offset to the delta. The further down the page the
+              switch happened, the bigger the vertical jump — which is exactly
+              why it looked fine on About and wrong on Contact.
+              Reading offsetLeft/offsetWidth off the active link and animating x
+              and width has no such failure mode, and it is physical, so it
+              travels the right way in Hebrew too. */}
+          {chip.w > 0 && (
+            <motion.span
+              className="nav-chip"
+              initial={false}
+              animate={{ x: chip.x, width: chip.w }}
+              transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 570, damping: 41 }}
+            />
+          )}
           {links.map((l) => {
             const isActive = l.id === current;
             return (
-              <span key={l.id} className="relative inline-flex shrink-0">
-                {isActive && (
-                  <motion.span
-                    layoutId={reduce ? undefined : "nav-chip"}
-                    className="nav-chip"
-                    transition={{ type: "spring", stiffness: 570, damping: 41 }}
-                  />
-                )}
-                <Link href={l.href} data-active={isActive} className="nav-link relative">
-                  {l.label}
-                </Link>
-              </span>
+              <Link
+                key={l.id}
+                ref={(el) => (linkRefs.current[l.id] = el)}
+                href={l.href}
+                data-active={isActive}
+                className="nav-link relative shrink-0"
+              >
+                {l.label}
+              </Link>
             );
           })}
         </div>

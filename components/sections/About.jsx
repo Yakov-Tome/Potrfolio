@@ -35,21 +35,26 @@ export default function About({ t }) {
   return (
     <section ref={ref} id="about" className="relative rounded-[24px] bg-white">
       <div className="sticky top-0 flex h-[100svh] flex-col items-center justify-start overflow-hidden py-[var(--section-pad)]">
-        {/* Three placements, one per band, straight off the frames:
-              Phone   cube  l:0 r:0 b:0, height 240 (stretched, not square)
-                      pyramid 240x240 at top:96, centred
-              Tablet  cube  l:48 r:48 b:-120, height 762 (stretched, hanging
-                            past the bottom edge)
-                      pyramid 240x240 at top:240, centred
-              Desktop cube  640x640 at l:120, centreY
-                      pyramid 640x640 at r:120, centreY, rotated 10
+        {/* Placement is PHYSICAL, not logical, and that is the fix the Hebrew
+            page needed: the Framer file has no RTL, so its cube is at left 120
+            and its pyramid at right 120 in both languages. Using start/end put
+            them on opposite sides in Hebrew — the two renders swapped places.
+            `left`/`right` here, deliberately, for both.
+
+            Computed insets read off the reference, one row per band:
+              phone    cube  top 486 / left 0 / right 0 / bottom 0   -> 358 sq
+                       pyramid 240x240, top 96, centred, rot 10
+              tablet   cube  top 264 / left 48 / right 48 / bottom -120 -> 756
+                       pyramid 240x240, top 240, centred, rot 10
+              desktop  cube  640x640, left 120, centreY
+                       pyramid 640x640, right 120, centreY, rot 10
             The rebuild ran the desktop placement from 810 up, so the whole
             tablet band had two 640px renders where the design has one wide
             hanging cube and one small centred pyramid. */}
         <Float period={4.8}>
           <motion.div
             aria-hidden="true"
-            className="decor absolute bottom-0 start-0 end-0 h-[240px] md:bottom-[-120px] md:start-12 md:end-12 md:h-[762px] lg:inset-auto lg:start-30 lg:top-1/2 lg:h-[640px] lg:w-[640px] lg:-translate-y-1/2"
+            className="decor absolute inset-x-0 bottom-0 top-[486px] md:inset-x-12 md:bottom-[-120px] md:top-[264px] lg:inset-auto lg:left-30 lg:top-1/2 lg:h-[640px] lg:w-[640px] lg:-translate-y-1/2"
             style={reduce ? {} : { y: cubeY }}
           >
             <Image src="/3d/purple-cube.png" alt="" fill sizes="(max-width: 1199px) 100vw, 640px" className="object-contain" />
@@ -59,7 +64,7 @@ export default function About({ t }) {
         <Float period={5.6}>
           <motion.div
             aria-hidden="true"
-            className="decor absolute top-24 start-1/2 h-[240px] w-[240px] -translate-x-1/2 md:top-60 lg:inset-auto lg:end-30 lg:top-1/2 lg:h-[640px] lg:w-[640px] lg:translate-x-0 lg:-translate-y-1/2"
+            className="decor absolute left-1/2 top-24 h-[240px] w-[240px] -translate-x-1/2 md:top-60 lg:inset-auto lg:left-auto lg:right-30 lg:top-1/2 lg:h-[640px] lg:w-[640px] lg:translate-x-0 lg:-translate-y-1/2"
             style={reduce ? { rotate: 10 } : { y: pyramidY, rotate: pyramidRotate }}
           >
             <Image src="/3d/blue-pyramid.png" alt="" fill sizes="(max-width: 1199px) 240px, 640px" className="object-contain" />
@@ -151,28 +156,30 @@ function AboutCard({ text, index, count, progress, last, cvLabel, reduce }) {
   // comes from the card shrinking as the next one lands on it, nothing else.
   const scale = useTransform(progress, [from, to], [1, last ? 1 : 0.92], { clamp: true });
 
-  // The cards do not arrive square. Measured against the card's own distance
-  // from the viewport top, the reference holds a full tilt while the card is
-  // still below the fold and straightens only as it lands:
-  //   card top   1014   714   411   308   settled
-  //   rotation   2.00  1.89  1.23  0.56      0
-  // and the sign alternates card to card (+2, -2, +2), so the stack reads as
-  // hand-placed rather than as a column of identical slabs. The stops below are
-  // those measurements interpolated, not a curve chosen to look similar — the
-  // fall-off is far too late and too sharp for any simple easing to reproduce.
+  // The cards do not arrive square, and the ramp is a straight line — measured
+  // against how far the scroll still is from the card's own document top, not
+  // against where the card has got to on screen (the card stops moving once it
+  // sticks, but the straightening carries on):
+  //   offset  900   700   500   380   300   220   140    60
+  //   degrees 1.96  1.67  1.23  0.96  0.78  0.60  0.42  0.25
+  // Those last five are dead linear at 0.0022 deg/px, and 0.0022 is 2/900 —
+  // one viewport. So: 2deg while the card is a full viewport away, falling
+  // linearly to 0 as the scroll reaches it, clamped at both ends. Confirmed at
+  // 390 too, where the slope is 2/844 rather than 2/900.
   //
-  // It is driven by scroll, not by a timed entrance: this used to be a 0.33deg
-  // rotation animated to 0 over 0.8s, which is both a sixth of the angle and
-  // finished before the card is anywhere near its resting place.
+  // The sign alternates card to card (+2, -2, +2), which is why the stack reads
+  // as hand-placed rather than as a column of identical slabs.
+  //
+  // This was a five-stop curve fitted to card-top positions, which reached 0 at
+  // 78% of the approach and so held a visible tilt in the wrong places. A
+  // straight line is both the measurement and the simpler thing.
   const cardRef = useRef(null);
   const { scrollYProgress: approach } = useScroll({
     target: cardRef,
     offset: ["start end", "start start"],
   });
   const sign = index % 2 === 0 ? 1 : -1;
-  const tilt = useTransform(approach, [0, 0.21, 0.54, 0.66, 0.78], [2 * sign, 1.89 * sign, 1.23 * sign, 0.56 * sign, 0], {
-    clamp: true,
-  });
+  const tilt = useTransform(approach, [0, 1], [2 * sign, 0], { clamp: true });
 
   return (
     <div ref={cardRef} className="sticky top-0 flex h-[100svh] items-center justify-center px-[var(--page-gutter)]">

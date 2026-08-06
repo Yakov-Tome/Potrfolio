@@ -4,6 +4,7 @@ import { useRef } from "react";
 import Image from "next/image";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import StackCard from "@/components/ui/StackCard";
+import { APPEAR_SPRING } from "@/components/motion/Reveal";
 import { skills } from "@/lib/content";
 import { skillCopy } from "@/lib/skill-copy";
 
@@ -36,23 +37,23 @@ export default function Stack({ t, locale }) {
           depth. The rotation and vertical drift here before were invented.
           (The Framer node is named "purple-cube"; the published build serves
           the Turquoise Cube. The layer name is stale, the build is the product.) */}
-      {/* 600px in the 810-1199 band, 720 from 1200, hidden below 810 — the
-          Tablet frame steps this render down and the Phone frame turns it off. */}
-      <div
-        aria-hidden="true"
-        className="decor pointer-events-none absolute start-1/2 top-[180px] hidden h-[600px] w-[600px] -translate-x-1/2 scale-[0.8] md:block lg:h-[720px] lg:w-[720px]"
-      >
-        <Image src="/3d/turquoise-cube.png" alt="" fill sizes="(max-width: 1199px) 600px, 720px" className="object-contain" />
-      </div>
-
       <div className="shell relative z-10 flex flex-col gap-[var(--section-gap)]">
         <h2 className="t-h2 section-title">{t.stack.title}</h2>
 
         {/* Three bands, and the middle one was missing: 1 column with a 16px gap
             below 810; 2 columns capped at 810 with a 24px gap from 810 to 1199;
             3 columns capped at 1200 with a 24px gap from 1200. Measured on the
-            build, the column tracks are 358 / 393 / 384 at 390 / 900 / 1440. */}
-        <div className="cap grid grid-cols-1 gap-4 md:[--cap:810px] md:grid-cols-2 md:gap-6 lg:[--cap:1200px] lg:grid-cols-3">
+            build, the column tracks are 358 / 393 / 384 at 390 / 900 / 1440.
+
+            `relative` because the render is anchored to THIS box: measured in
+            document space the cube's top sits at the grid's top +16 on desktop
+            and -106 on tablet, and its centre is the grid's centre. It used to
+            hang off the section with `start-1/2 -translate-x-1/2`, which is the
+            bug behind the cube sliding off the left edge in Hebrew — `start-1/2`
+            resolves to `right: 50%` in RTL while `-translate-x-1/2` stays
+            physical, so the two compose into a box a full width off-centre. */}
+        <div className="cap relative grid grid-cols-1 gap-4 md:[--cap:810px] md:grid-cols-2 md:gap-6 lg:[--cap:1200px] lg:grid-cols-3">
+          <StackRender reduce={reduce} />
           {skills.map((skill) => (
             <ScrollScale key={skill.id} reduce={reduce}>
               <StackCard
@@ -66,6 +67,49 @@ export default function Stack({ t, locale }) {
         </div>
       </div>
     </section>
+  );
+}
+
+/**
+ * The render behind the grid: 600px in the 810-1199 band, 720 from 1200, hidden
+ * below 810 — the Tablet frame steps it down and the Phone frame turns it off.
+ *
+ * It is NOT parked. Held completely still with the scroll frozen, the
+ * reference's cube runs y 180 -> 204 -> 180 at 1440 and 60 -> 84 -> 60 at 900:
+ * a +/-12px vertical drift on a ~4.3s cycle, never horizontal, never rotating.
+ * That is the same language the About renders float in, and it was written here
+ * as a static element with an invented rotation. The x never moves at all.
+ *
+ * The scale is the design's usual 0.8 -> 1.0 on approach, measured 576 for a
+ * 720 cube while it is still a viewport away and 720 once it is in view — so it
+ * gets the same entrance every other block gets, not a permanent 0.8.
+ */
+function StackRender({ reduce }) {
+  const cube = (
+    <div className="absolute left-1/2 top-[-106px] hidden h-[600px] w-[600px] -translate-x-1/2 md:block lg:top-4 lg:h-[720px] lg:w-[720px]">
+      <Image src="/3d/turquoise-cube.png" alt="" fill sizes="(max-width: 1199px) 600px, 720px" className="object-contain" />
+    </div>
+  );
+
+  if (reduce) return <div className="decor pointer-events-none">{cube}</div>;
+
+  return (
+    <motion.div
+      aria-hidden="true"
+      className="decor pointer-events-none absolute inset-0"
+      initial={{ scale: 0.8 }}
+      whileInView={{ scale: 1 }}
+      viewport={{ once: true, amount: "some" }}
+      transition={APPEAR_SPRING}
+    >
+      <motion.div
+        className="absolute inset-0"
+        animate={{ y: [0, -12, 0, 12, 0] }}
+        transition={{ duration: 4.3, repeat: Infinity, ease: "easeInOut", times: [0, 0.25, 0.5, 0.75, 1] }}
+      >
+        {cube}
+      </motion.div>
+    </motion.div>
   );
 }
 

@@ -55,13 +55,17 @@ import ProfilePhoto from "@/components/ui/ProfilePhoto";
 // and 390 at desktop — only because getBoundingClientRect returns the
 // axis-aligned box of a rotated element: 280*(cos10+sin10)=324.5 and
 // 280*(cos55+sin55)=390. All six are the same square.)
+// Positions are PHYSICAL. The Framer file has no RTL, so the orange pyramid is
+// at the top-left and the turquoise star at the top-right in both languages;
+// `start`/`end` mirrored the whole arrangement on the Hebrew page, which put
+// every render on the wrong side of the portrait.
 const ELEMENTS = [
-  { src: "/3d/orange-pyramid.png", rate: 0.4, shrinkAt: 300, rotate: 10, z: 1, mobile: "top-5 end-0", desktop: "md:top-0 md:start-20 md:end-auto" },
-  { src: "/3d/purple-sphere.png", rate: 0.5, shrinkAt: 450, rotate: 0, z: 2, mobile: "-top-5 start-1/2 -translate-x-1/2", desktop: "md:top-1/2 md:-translate-y-1/2 md:start-0 md:translate-x-0" },
-  { src: "/3d/blue-cylinder.png", rate: 0.6, shrinkAt: 450, rotate: -55, z: 1, mobile: "top-5 start-0", desktop: "md:top-auto md:bottom-0 md:start-20" },
-  { src: "/3d/turquoise-star.png", rate: 0.4, shrinkAt: 300, rotate: 0, z: 2, mobile: "-bottom-5 end-0", desktop: "md:bottom-auto md:top-0 md:end-20" },
-  { src: "/3d/lime-green.png", rate: 0.5, shrinkAt: 450, rotate: 0, z: 1, mobile: "-bottom-15 start-1/2 -translate-x-1/2", desktop: "md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:end-0 md:start-auto md:translate-x-0" },
-  { src: "/3d/yellow-cube.png", rate: 0.6, shrinkAt: 450, rotate: 0, z: 2, mobile: "-bottom-5 start-0", desktop: "md:bottom-0 md:end-20 md:start-auto" },
+  { src: "/3d/orange-pyramid.png", rate: 0.4, shrinkAt: 300, rotate: 10, z: 1, mobile: "top-5 right-0", desktop: "md:top-0 md:left-20 md:right-auto" },
+  { src: "/3d/purple-sphere.png", rate: 0.5, shrinkAt: 450, rotate: 0, z: 2, mobile: "-top-5 left-1/2 -translate-x-1/2", desktop: "md:top-1/2 md:-translate-y-1/2 md:left-0 md:translate-x-0" },
+  { src: "/3d/blue-cylinder.png", rate: 0.6, shrinkAt: 450, rotate: -55, z: 1, mobile: "top-5 left-0", desktop: "md:top-auto md:bottom-0 md:left-20" },
+  { src: "/3d/turquoise-star.png", rate: 0.4, shrinkAt: 300, rotate: 0, z: 2, mobile: "-bottom-5 right-0", desktop: "md:bottom-auto md:top-0 md:right-20" },
+  { src: "/3d/lime-green.png", rate: 0.5, shrinkAt: 450, rotate: 0, z: 1, mobile: "-bottom-15 left-1/2 -translate-x-1/2", desktop: "md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:right-0 md:left-auto md:translate-x-0" },
+  { src: "/3d/yellow-cube.png", rate: 0.6, shrinkAt: 450, rotate: 0, z: 2, mobile: "-bottom-5 left-0", desktop: "md:bottom-0 md:right-20 md:left-auto" },
 ];
 
 const RENDER_BOX = "h-[140px] w-[140px] md:h-[200px] md:w-[200px] lg:h-[280px] lg:w-[280px]";
@@ -260,8 +264,14 @@ function SkillsTicker({ items }) {
 function Ticker({ text }) {
   const run = Array.from({ length: 6 }, () => text).join("");
 
+  // `dir="ltr"` on the marquee, and it is load-bearing rather than cosmetic. In
+  // an RTL document the flex track lays out from the right edge and the
+  // animation's translateX(-50%) then pushes it further the same way, so the
+  // whole 14596px track ended up at x=-14056 with a sliver on screen: on the
+  // Hebrew page the black band simply was not there. The animation is a
+  // physical translate, so the box it moves has to be physical too.
   return (
-    <div className="relative flex w-full overflow-hidden">
+    <div className="relative flex w-full overflow-hidden" dir="ltr">
       <div className="ticker-track flex shrink-0 whitespace-nowrap">
         <span className="hero-ticker px-2">{run}</span>
         <span className="hero-ticker px-2">{run}</span>

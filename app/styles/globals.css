@@ -34,7 +34,7 @@
   --color-blue-70: rgb(102, 112, 255);
   --color-orange-60: rgb(249, 71, 6);
 
-  --font-sans: var(--font-public-sans), var(--font-assistant), system-ui, sans-serif;
+  --font-sans: var(--font-public-sans), var(--font-heebo), var(--font-rubik), system-ui, sans-serif;
 
   --radius-section: 24px;
   --radius-card: 48px;
@@ -84,9 +84,10 @@ body {
 }
 
 /* Hebrew has no Public Sans cut, so the Hebrew face carries the text and the
-   Latin face is kept for the technology names that stay in English either way. */
+   Latin face is kept for the technology names that stay in English either way.
+   Heebo first, Rubik behind it as the secondary Hebrew face. */
 html[dir="rtl"] body {
-  font-family: var(--font-assistant), var(--font-public-sans), system-ui, sans-serif;
+  font-family: var(--font-heebo), var(--font-rubik), var(--font-public-sans), system-ui, sans-serif;
 }
 
 /* ------------------------------------------------------------ type scale */
@@ -514,9 +515,13 @@ html[dir="rtl"] .btn-pill {
 /* The orange chip. It is one element that moves between links rather than one
    background per link, which is what makes the reference's nav read as a
    single object. */
+/* `left: 0` only — never `inset-inline`. That sets left AND right, which pins
+   the chip to both edges of the pill, so its animated width has nothing to do
+   and in RTL the right edge wins: the chip detaches and parks outside the bar.
+   Position comes entirely from the animated x and width. */
 .nav-chip {
   position: absolute;
-  inset-inline: 0;
+  left: 0;
   top: 50%;
   height: 42px;
   margin-top: -21px;
