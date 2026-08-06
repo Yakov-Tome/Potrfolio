@@ -182,7 +182,11 @@ function AboutCard({ text, index, count, progress, last, cvLabel, reduce }) {
   const tilt = useTransform(approach, [0, 1], [2 * sign, 0], { clamp: true });
 
   return (
-    <div ref={cardRef} className="sticky top-0 flex h-[100svh] items-center justify-center px-[var(--page-gutter)]">
+    // No side padding: the design's "About Card-01" slot has none and the card
+    // inside it is `w:1fr maxW:900`, so it spans the section. With the gutter now
+    // on main, keeping it here too indented the card twice — 28px instead of the
+    // reference's 14 at 390.
+    <div ref={cardRef} className="sticky top-0 flex h-[100svh] items-center justify-center">
       <motion.div
         className="tint-card roomy w-full max-w-[900px]"
         style={reduce ? {} : { scale, rotate: tilt }}

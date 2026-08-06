@@ -4,7 +4,9 @@ export default function Footer({ t }) {
   const year = new Date().getFullYear();
   return (
     <footer className="border-t border-gray-95">
-      <div className="shell py-10">
+      {/* Its own gutter: the footer sits outside <main>, which is where the page
+          gutter now lives. */}
+      <div className="shell px-[var(--page-gutter)] py-10">
         <div className="cap flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <p className="t-body-small">
             © {year} {site.name}. {t.footer.rights}

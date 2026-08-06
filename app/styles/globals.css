@@ -156,10 +156,28 @@ html[dir="rtl"] body {
    screen, which is the single most visible way this rebuild diverged.
 
    What the design does cap is content, one block at a time — see .cap below. */
+/* The gutter lives HERE, on main, exactly as the reference has it, and not on
+   each section's own container. Content lands in the same place either way, but
+   the section boundary does not: with the gutter on main a <section> starts at
+   24px, so its 24px radius has something to round against, its overflow clips
+   where the design clips, and a decor element told to span `inset-x-0` spans the
+   SECTION rather than the whole viewport — which is what the About renders are
+   authored against (measured 358 wide at 390, i.e. 390 minus two 16px gutters,
+   where ours had been a full 390).
+
+   `overflow-x: clip` rather than `hidden`: clip does not create a scroll
+   container, so the sticky positioning the About and Stack sections depend on
+   keeps working, and an element that deliberately bleeds into the gutter — the
+   hero marquee is authored at l:-24 r:-24 — still paints into it. */
+main {
+  display: block;
+  padding-inline: var(--page-gutter);
+  overflow-x: clip;
+}
+
 .shell {
   width: 100%;
   margin-inline: auto;
-  padding-inline: var(--page-gutter);
 }
 
 /* The measured caps, each on the block that carries it rather than on the page:
@@ -174,14 +192,17 @@ html[dir="rtl"] body {
   margin-inline: auto;
 }
 
+/* No radius and no fill. In the reference only the sections the design actually
+   FILLS carry them — About and Testimonials are `fill: White` with r24, while
+   Stack, Services, Pricing and Projects are r0 with no fill at all. Ours had
+   both on every section; the page is white either way, but this is what the
+   file says. The one filled section here is About, which sets them itself. */
 .section {
   padding-block: var(--section-pad);
   display: flex;
   flex-direction: column;
   gap: var(--section-gap);
   align-items: center;
-  border-radius: var(--radius-section);
-  background: var(--color-white);
 }
 
 /* Centred, not start-aligned. The Heading 2 *style* says `alignment: left`, so

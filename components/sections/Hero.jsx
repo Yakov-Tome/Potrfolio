@@ -91,8 +91,15 @@ export default function Hero({ t }) {
   const { scrollY } = useScroll();
 
   return (
-    <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden">
-      <div className="decor absolute inset-x-0 top-1/2 hidden -translate-y-1/2 md:block" aria-hidden="true">
+    // No `overflow-hidden` here. The section is inset by the page gutter now, and
+    // the marquee is authored to bleed back out past it (r:-24 l:-24), which a
+    // clip on the section would eat. `main` carries `overflow-x: clip` instead,
+    // so the bleed paints into the gutter and nothing can widen the document.
+    <section className="relative flex min-h-[100svh] items-center justify-center">
+      <div
+        className="decor absolute -inset-x-[var(--page-gutter)] top-1/2 hidden -translate-y-1/2 md:block"
+        aria-hidden="true"
+      >
         <Ticker text={t.hero.ticker} />
       </div>
 
@@ -104,11 +111,10 @@ export default function Hero({ t }) {
           `inset-0` on phones, which spread the renders 144px further apart
           than the design and pushed two of them off the visible area. */}
       {/* The stage sits inside the page gutter, not against the viewport edge —
-          it is a child of Main, which carries the 16/24px padding, so it
-          measures 358 at 390 and 852 at 900. Running it edge to edge pushed
-          every rim render one gutter further out than the design. */}
+          it measures 358 at 390 and 852 at 900. That is now simply the section's
+          own width, because the gutter moved to main. */}
       <div
-        className="decor absolute inset-x-[var(--page-gutter)] top-1/2 h-[700px] -translate-y-1/2 md:h-[720px] lg:inset-x-auto lg:h-[700px] lg:w-[1100px]"
+        className="decor absolute inset-x-0 top-1/2 h-[700px] -translate-y-1/2 md:h-[720px] lg:inset-x-auto lg:h-[700px] lg:w-[1100px]"
         aria-hidden="true"
       >
         {ELEMENTS.map((el) => (
