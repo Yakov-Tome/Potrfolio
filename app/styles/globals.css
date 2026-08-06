@@ -331,7 +331,14 @@ html[dir="rtl"] .btn-pill {
   position: relative;
   width: 280px;
   height: 280px;
-  perspective: 1600px;
+  /* 500px, not 1600. Solved from the reference's own distortion: at rest the
+     card is rotated 10deg about Y, and its projected box measures 276x294 for a
+     280 square. A plane rotated by t under a perspective d has its near edge
+     scaled by d / (d - (w/2)sin t), so 294/280 = 1.05 gives d = 510. 1600px
+     made that 284 — the card read almost flat where the original has real
+     depth. It is also the same 500px the Stack card's matrix carries (m34 =
+     0.002), so this is the design's one perspective value, used twice. */
+  perspective: 500px;
   outline-offset: 8px;
 }
 .profile-face {
@@ -342,13 +349,36 @@ html[dir="rtl"] .btn-pill {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transform-style: preserve-3d;
+  /* Both faces carry it, measured identical on each. Without it the white back
+     face has no edge against a white page and the card stops existing when it
+     turns — the circles and the arrow float in nothing. */
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 20px 20px 0px;
 }
 .profile-front {
   /* blue-70, the node's fill behind the portrait. */
   background: var(--color-blue-70);
 }
+/* The portrait is authored TALLER than its frame and clipped, not fitted: the
+   reference's img element is 280x420 inside a 280x280 overflow-hidden face, so
+   the bottom third never shows. `object-position: 47.9% 24.1%` is the framing
+   inside that element — measured, not chosen. Rendering it as a 280 square
+   instead centred the whole photo and left the face small in a field of
+   background, which is the asymmetry against the original. */
+.profile-photo {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  width: 100%;
+  height: 420px;
+  object-fit: cover;
+  object-position: 47.9% 24.1%;
+}
 .profile-back {
-  background: var(--color-white);
+  /* NOT solid white. The hover variant fills the back with rgba(255,255,255,.85)
+     and that translucency is the effect — the black marquee behind the card
+     shows through it as grey, which is what makes the turn read as a pane of
+     glass rather than as a blank card. */
+  background: rgba(255, 255, 255, 0.85);
   display: grid;
   place-items: center;
 }

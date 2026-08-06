@@ -48,19 +48,11 @@ export default function ProfilePhoto({ alt, ringText }) {
         variants={{ rest: { rotateY: 10 }, flip: { rotateY: -180 } }}
         transition={turn}
       >
-        {/* The node authors its portrait 420px tall inside a 280px frame and
-            top-aligns it, because its source is a 2:3 photo and that framing
-            keeps the face in the square. This source is 1:1, so the same trick
-            would blow it up to 420 and crop everything below the eyes — a
-            square image wants the square box. Rendered at 560 for 2x. */}
-        <Image
-          src="/profile.png"
-          alt={alt}
-          width={560}
-          height={560}
-          priority
-          className="absolute inset-0 h-full w-full object-cover"
-        />
+        {/* 280x420 in a 280x280 clip — the geometry is in .profile-photo, and
+            it is the reference's, measured: the img element really is 420 tall
+            with `object-fit: cover` and `object-position: 47.9% 24.1%`, and the
+            face's overflow eats the bottom third. Served at 2x. */}
+        <Image src="/profile.png" alt={alt} width={560} height={840} priority className="profile-photo" />
       </motion.div>
 
       <motion.div
