@@ -48,15 +48,18 @@ export default function ProfilePhoto({ alt, ringText }) {
         variants={{ rest: { rotateY: 10 }, flip: { rotateY: -180 } }}
         transition={turn}
       >
-        {/* h-[420px] against a 280px box, top-aligned and clipped — the node
-            authors the image taller than its frame rather than cropping it. */}
+        {/* The node authors its portrait 420px tall inside a 280px frame and
+            top-aligns it, because its source is a 2:3 photo and that framing
+            keeps the face in the square. This source is 1:1, so the same trick
+            would blow it up to 420 and crop everything below the eyes — a
+            square image wants the square box. Rendered at 560 for 2x. */}
         <Image
-          src="/mobile.jpg"
+          src="/profile.png"
           alt={alt}
-          width={280}
-          height={420}
+          width={560}
+          height={560}
           priority
-          className="absolute inset-x-0 top-0 h-[420px] w-full object-cover object-top"
+          className="absolute inset-0 h-full w-full object-cover"
         />
       </motion.div>
 
