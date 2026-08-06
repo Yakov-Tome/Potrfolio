@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import Button from "@/components/ui/Button";
@@ -46,9 +46,23 @@ import ProfilePhoto from "@/components/ui/ProfilePhoto";
  */
 
 // rate: parallax, as a fraction of scroll distance (measured, see above).
-// shrinkAt: scroll depth in px by which the scroll-linked shrink to 0.8 has
-// finished. The reference completes the top band earlier than the rest — those
-// renders leave the viewport first — so this is per-band, not global.
+//
+// The shrink to 0.8 is NOT a ramp, and that is the correction here. Sampled
+// every 50px the reference holds a flat 1.00 and then snaps:
+//   orange, turquoise   1.00 through 150, 0.80 at 200
+//   purple, lime        1.00 through 300, 0.80 at 350
+//   blue,   yellow      1.00 through 400, 0.80 at 450
+// Three thresholds, and one rule generates all of them. With parallax a
+// render's centre sits at cy0 - s(1 + rate), so it reaches the top of the
+// viewport at s = cy0 / (1 + rate):
+//   orange 240/1.4 = 171 · purple 450/1.5 = 300 · blue 660/1.6 = 412
+// — each within its own measured bracket. So a render holds full size until
+// its CENTRE crosses the top of the screen, and only then parks at 0.8, by
+// which point it is out of sight.
+//
+// This was a linear ramp starting at scroll 0, which shrank all six visibly
+// during the first flick of the wheel — the one place the original keeps them
+// at full size.
 // Size is a three-band step, and the middle band was missing entirely: measured
 // on the build, every render is 140px below 810, 200px from 810 to 1199 and
 // 280px from 1200. (The Orange Pyramid and Blue Cylinder measure larger — 324
@@ -60,12 +74,12 @@ import ProfilePhoto from "@/components/ui/ProfilePhoto";
 // `start`/`end` mirrored the whole arrangement on the Hebrew page, which put
 // every render on the wrong side of the portrait.
 const ELEMENTS = [
-  { src: "/3d/orange-pyramid.png", rate: 0.4, shrinkAt: 300, rotate: 10, z: 1, mobile: "top-5 right-0", desktop: "md:top-0 md:left-20 md:right-auto" },
-  { src: "/3d/purple-sphere.png", rate: 0.5, shrinkAt: 450, rotate: 0, z: 2, mobile: "-top-5 left-1/2 -translate-x-1/2", desktop: "md:top-1/2 md:-translate-y-1/2 md:left-0 md:translate-x-0" },
-  { src: "/3d/blue-cylinder.png", rate: 0.6, shrinkAt: 450, rotate: -55, z: 1, mobile: "top-5 left-0", desktop: "md:top-auto md:bottom-0 md:left-20" },
-  { src: "/3d/turquoise-star.png", rate: 0.4, shrinkAt: 300, rotate: 0, z: 2, mobile: "-bottom-5 right-0", desktop: "md:bottom-auto md:top-0 md:right-20" },
-  { src: "/3d/lime-green.png", rate: 0.5, shrinkAt: 450, rotate: 0, z: 1, mobile: "-bottom-15 left-1/2 -translate-x-1/2", desktop: "md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:right-0 md:left-auto md:translate-x-0" },
-  { src: "/3d/yellow-cube.png", rate: 0.6, shrinkAt: 450, rotate: 0, z: 2, mobile: "-bottom-5 left-0", desktop: "md:bottom-0 md:right-20 md:left-auto" },
+  { src: "/3d/orange-pyramid.png", rate: 0.4, rotate: 10, z: 1, mobile: "top-5 right-0", desktop: "md:top-0 md:left-20 md:right-auto" },
+  { src: "/3d/purple-sphere.png", rate: 0.5, rotate: 0, z: 2, mobile: "-top-5 left-1/2 -translate-x-1/2", desktop: "md:top-1/2 md:-translate-y-1/2 md:left-0 md:translate-x-0" },
+  { src: "/3d/blue-cylinder.png", rate: 0.6, rotate: -55, z: 1, mobile: "top-5 left-0", desktop: "md:top-auto md:bottom-0 md:left-20" },
+  { src: "/3d/turquoise-star.png", rate: 0.4, rotate: 0, z: 2, mobile: "-bottom-5 right-0", desktop: "md:bottom-auto md:top-0 md:right-20" },
+  { src: "/3d/lime-green.png", rate: 0.5, rotate: 0, z: 1, mobile: "-bottom-15 left-1/2 -translate-x-1/2", desktop: "md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:right-0 md:left-auto md:translate-x-0" },
+  { src: "/3d/yellow-cube.png", rate: 0.6, rotate: 0, z: 2, mobile: "-bottom-5 left-0", desktop: "md:bottom-0 md:right-20 md:left-auto" },
 ];
 
 const RENDER_BOX = "h-[140px] w-[140px] md:h-[200px] md:w-[200px] lg:h-[280px] lg:w-[280px]";
@@ -112,16 +126,43 @@ function Decor({ el, scrollY, reduce }) {
   // fraction of scroll DISTANCE, so expressing it in pixels is the measurement
   // written down directly, and it stays correct at any viewport height.
   const y = useTransform(scrollY, (v) => -el.rate * v);
-  const shrink = useTransform(scrollY, [0, el.shrinkAt], [1, 0.8], { clamp: true });
+
+  // The park threshold, derived rather than tabulated: this render's centre
+  // starts at cy0 and travels up at (1 + rate) per pixel of scroll, so it
+  // crosses the top of the screen at cy0 / (1 + rate). Measuring cy0 from the
+  // element itself keeps it right at every breakpoint and viewport height,
+  // where three hard-coded numbers would only be right at 1440x900.
+  const boxRef = useRef(null);
+  const [parkAt, setParkAt] = useState(Infinity);
+  useEffect(() => {
+    const measure = () => {
+      const node = boxRef.current;
+      if (!node) return;
+      const r = node.getBoundingClientRect();
+      const cy0 = r.top + window.scrollY + r.height / 2;
+      setParkAt(cy0 / (1 + el.rate));
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [el.rate]);
+
+  const [parked, setParked] = useState(false);
+  useEffect(() => {
+    if (!Number.isFinite(parkAt)) return;
+    const check = (v) => setParked(v >= parkAt);
+    check(scrollY.get());
+    return scrollY.on("change", check);
+  }, [scrollY, parkAt]);
 
   // Two scales, deliberately nested rather than combined. The entrance runs
-  // 0.8 → 1.0 on the outer element and the scroll shrink runs 1.0 → 0.8 on the
-  // inner one, so the product is 0.8 at first paint, 1.0 once settled and 0.8
-  // again once scrolled past — which is exactly the three values measured off
-  // the reference. Collapsing them into one value cannot express that, and a
-  // `style` MotionValue would silently win over an `animate` prop anyway.
+  // 0.8 → 1.0 on the outer element and the park runs 1.0 → 0.8 on the inner
+  // one, so the product is 0.8 at first paint, 1.0 once settled and 0.8 again
+  // once scrolled past — which is exactly the three values measured off the
+  // reference. Collapsing them into one value cannot express that.
   return (
     <motion.div
+      ref={boxRef}
       className={`absolute ${RENDER_BOX} ${el.mobile} ${el.desktop}`}
       style={{ zIndex: el.z }}
       initial={reduce ? false : { scale: 0.8 }}
@@ -137,7 +178,9 @@ function Decor({ el, scrollY, reduce }) {
         // against the nearest positioned ancestor, and the entrance wrapper
         // above is the one that used to provide it.
         className="relative h-full w-full"
-        style={{ rotate: el.rotate, ...(reduce ? {} : { y, scale: shrink }) }}
+        style={{ rotate: el.rotate, ...(reduce ? {} : { y }) }}
+        animate={reduce ? undefined : { scale: parked ? 0.8 : 1 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
         <Image
           src={el.src}
