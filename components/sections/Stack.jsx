@@ -30,13 +30,12 @@ export default function Stack({ t, locale }) {
   const reduce = useReducedMotion();
 
   return (
-    <section id="stack" className="section relative overflow-hidden">
-      {/* The render is parked, not animated. It measures 576px in the reference
-          against an authored 720 — i.e. it sits at the same 0.8 this design
-          parks everything at — and it neither rotates nor drifts at any scroll
-          depth. The rotation and vertical drift here before were invented.
-          (The Framer node is named "purple-cube"; the published build serves
-          the Turquoise Cube. The layer name is stale, the build is the product.) */}
+    // `overflow-clip`, not `overflow-hidden`: the render inside is sticky, and
+    // `hidden` would make this a scroll container and kill that outright. Clip
+    // still keeps the cube inside the section so it cannot ride into Resume.
+    <section id="stack" className="section relative overflow-clip">
+      <StackRender reduce={reduce} />
+
       <div className="shell relative z-10 flex flex-col gap-[var(--section-gap)]">
         <h2 className="t-h2 section-title">{t.stack.title}</h2>
 
@@ -52,8 +51,7 @@ export default function Stack({ t, locale }) {
             bug behind the cube sliding off the left edge in Hebrew — `start-1/2`
             resolves to `right: 50%` in RTL while `-translate-x-1/2` stays
             physical, so the two compose into a box a full width off-centre. */}
-        <div className="cap relative grid grid-cols-1 gap-4 md:[--cap:810px] md:grid-cols-2 md:gap-6 lg:[--cap:1200px] lg:grid-cols-3">
-          <StackRender reduce={reduce} />
+        <div className="cap grid grid-cols-1 gap-4 md:[--cap:810px] md:grid-cols-2 md:gap-6 lg:[--cap:1200px] lg:grid-cols-3">
           {skills.map((skill) => (
             <ScrollScale key={skill.id} reduce={reduce}>
               <StackCard
@@ -74,42 +72,68 @@ export default function Stack({ t, locale }) {
  * The render behind the grid: 600px in the 810-1199 band, 720 from 1200, hidden
  * below 810 — the Tablet frame steps it down and the Phone frame turns it off.
  *
- * It is NOT parked. Held completely still with the scroll frozen, the
- * reference's cube runs y 180 -> 204 -> 180 at 1440 and 60 -> 84 -> 60 at 900:
- * a +/-12px vertical drift on a ~4.3s cycle, never horizontal, never rotating.
- * That is the same language the About renders float in, and it was written here
- * as a static element with an invented rotation. The x never moves at all.
+ * It is STICKY, and that is the behaviour this section was missing. Tracked
+ * through the whole section at 1440x900, the reference's cube moves at -1.00 per
+ * pixel of scroll until its top reaches 252, holds there across roughly a
+ * thousand pixels of scrolling, and only then resumes -1.00:
+ *   scrollY  4210  4540  4870  5200  5529  5859  6189  6518
+ *   cube top 1146   816   486   252   252   252   119  -210
+ * Ours ran -1.00 the whole way, so the cube was gone before the grid had really
+ * started — the user sees the top of it clipped between the first two rows and
+ * nothing after.
  *
- * The scale is the design's usual 0.8 -> 1.0 on approach, measured 576 for a
- * 720 cube while it is still a viewport away and 720 once it is in view — so it
- * gets the same entrance every other block gets, not a permanent 0.8.
+ * 252 is the top at the 0.8 scale; the box itself is 720 and sticks at 180
+ * (180 + 720*0.1 = 252). It is a fixed pixel offset, not a viewport fraction:
+ * measured at 700, 900 and 1100 tall the stuck top stays ~195-205 rather than
+ * scaling with the viewport.
+ *
+ * On top of that it drifts. Held completely still with the scroll frozen the
+ * cube runs y 180 -> 204 -> 180 at 1440 and 60 -> 84 -> 60 at 900: a +/-12px
+ * vertical float on a ~4.3s cycle, never horizontal, never rotating. And it
+ * takes the design's usual 0.8 -> 1.0 entrance like every other block.
+ *
+ * Three transforms, three wrappers, deliberately: sticky cannot live on an
+ * element whose transform is being animated, and the float and the entrance
+ * cannot share one transform either.
  */
 function StackRender({ reduce }) {
   const cube = (
-    <div className="absolute left-1/2 top-[-106px] hidden h-[600px] w-[600px] -translate-x-1/2 md:block lg:top-4 lg:h-[720px] lg:w-[720px]">
-      <Image src="/3d/turquoise-cube.png" alt="" fill sizes="(max-width: 1199px) 600px, 720px" className="object-contain" />
-    </div>
+    <Image src="/3d/turquoise-cube.png" alt="" fill sizes="(max-width: 1199px) 600px, 720px" className="object-contain" />
   );
 
-  if (reduce) return <div className="decor pointer-events-none">{cube}</div>;
+  const box = "absolute left-1/2 top-0 h-full w-[600px] -translate-x-1/2 lg:w-[720px]";
 
   return (
-    <motion.div
-      aria-hidden="true"
-      className="decor pointer-events-none absolute inset-0"
-      initial={{ scale: 0.8 }}
-      whileInView={{ scale: 1 }}
-      viewport={{ once: true, amount: "some" }}
-      transition={APPEAR_SPRING}
-    >
-      <motion.div
-        className="absolute inset-0"
-        animate={{ y: [0, -12, 0, 12, 0] }}
-        transition={{ duration: 4.3, repeat: Infinity, ease: "easeInOut", times: [0, 0.25, 0.5, 0.75, 1] }}
-      >
-        {cube}
-      </motion.div>
-    </motion.div>
+    <div className="decor pointer-events-none absolute inset-0 hidden md:block" aria-hidden="true">
+      {/* The sticky element carries the cube's HEIGHT, and that is what decides
+          where it lets go: a sticky box releases when its own bottom reaches the
+          bottom of its containing block, so a zero-height one would stay pinned
+          720px too long — measured, ours held at 252 all the way to the end of
+          the section while the reference had already resumed -1.00. The wrapper
+          is absolutely positioned over the section, so this height costs the
+          layout nothing. */}
+      <div className="sticky top-[180px] h-[600px] lg:h-[720px]">
+        {reduce ? (
+          <div className={box}>{cube}</div>
+        ) : (
+          <motion.div
+            className={box}
+            initial={{ scale: 0.8 }}
+            whileInView={{ scale: 1 }}
+            viewport={{ once: true, amount: "some" }}
+            transition={APPEAR_SPRING}
+          >
+            <motion.div
+              className="absolute inset-0"
+              animate={{ y: [0, -12, 0, 12, 0] }}
+              transition={{ duration: 4.3, repeat: Infinity, ease: "easeInOut", times: [0, 0.25, 0.5, 0.75, 1] }}
+            >
+              {cube}
+            </motion.div>
+          </motion.div>
+        )}
+      </div>
+    </div>
   );
 }
 
