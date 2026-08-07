@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Button from "@/components/ui/Button";
 import { site } from "@/lib/content";
 
 /**
@@ -40,18 +39,30 @@ export default function Contact({ t, locale }) {
 
   return (
     <section id="contact" className="section section--flush-bottom">
-      <div className="cap shell flex w-full flex-col gap-12 md:flex-row md:gap-6">
-        {/* The wide first column: the reference puts its "Book a Call" button
-            here alongside the details. */}
-        <div className="flex flex-col items-start gap-6 md:w-[40%]">
+      {/* Below 810 this is a two-column GRID with a 48px gap and the first
+          column spanning both — measured on the reference at 390: columns
+          155px 155px in a 358 block, children 358/155/155/155. From 810 it is a
+          flex row on a 24px gap. It was a plain stack at phone.
+          The columns take the reference's own 466:220:220 ratio (its fourth,
+          Legal, is not built). With one column fewer they stretch to fill the
+          row rather than leaving a 245px void where a column should be. */}
+      <div className="cap shell grid w-full grid-cols-2 gap-12 md:flex md:flex-row md:gap-6">
+        <div className="col-span-2 flex flex-col items-start gap-6 md:col-span-1 md:flex-[466] md:basis-0">
           <h2 className="t-h4 close-head">{t.contact.columns.contact}</h2>
-          <Button href={`mailto:${site.email}`} icon="mail" external>
-            {t.contact.cta}
-          </Button>
+          {/* A text link on the column's own rhythm, not a pill. The reference's
+              "Book a Call" sits here with no background, no radius and no
+              padding, at the same size and 2em line as the links beside it —
+              the CTA button in this region was this rebuild's addition. */}
           <div className="flex flex-col">
             <a
               href={`mailto:${site.email}`}
               className="close-link link-underline font-medium text-black no-underline"
+            >
+              {t.contact.cta}
+            </a>
+            <a
+              href={`mailto:${site.email}`}
+              className="close-link link-underline text-gray-30 no-underline"
             >
               {site.email}
             </a>
@@ -66,7 +77,7 @@ export default function Contact({ t, locale }) {
           </div>
         </div>
 
-        <nav className="flex flex-col items-start gap-6 md:w-[20%]" aria-label={t.contact.columns.links}>
+        <nav className="flex flex-col items-start gap-6 md:flex-[220] md:basis-0" aria-label={t.contact.columns.links}>
           <h2 className="t-h4 close-head">{t.contact.columns.links}</h2>
           <ul className="m-0 flex list-none flex-col p-0">
             {links.map((l) => (
@@ -79,7 +90,7 @@ export default function Contact({ t, locale }) {
           </ul>
         </nav>
 
-        <div className="flex flex-col items-start gap-6 md:w-[20%]">
+        <div className="flex flex-col items-start gap-6 md:flex-[220] md:basis-0">
           <h2 className="t-h4 close-head">{t.contact.columns.social}</h2>
           <ul className="m-0 flex list-none flex-col p-0">
             {social.map((s) => (

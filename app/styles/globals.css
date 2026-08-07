@@ -251,9 +251,9 @@ main {
    why each row sits exactly 48px below the last and the four-link column comes
    out 192 tall. These were 16px on an 8px gap, which read as a footnote rather
    than as the design's closing statement.
-   The reference at 390 could not be measured — that region is ~30k down a page
-   that never settles at phone width — so the phone size follows Body Big's own
-   band (16) and the line stays proportional at 2em. */
+   Three bands, all measured once the region could be reached at every width:
+   16/32 below 810, 18/36 to 1199, 24/48 above. The line is 2em throughout,
+   which is why the four-link column comes to exactly 4 x the line. */
 /* The closing columns' headings. Heading 4's own style is 500, but the build
    renders these three at 700 — a per-element override in the design, not a
    change to the style. It has to live here rather than as `font-bold` in the
@@ -269,11 +269,15 @@ main {
   line-height: 2em;
 }
 
+/* These two have to sit HERE, not up in the type-scale media blocks. Those come
+   earlier in the file, and a later rule of equal specificity wins whatever the
+   media query says — putting them there left every band rendering 16px. */
 @media (min-width: 810px) {
-  .close-link {
-    font-size: 24px;
-    line-height: 48px;
-  }
+  .close-link { font-size: 18px; }
+}
+
+@media (min-width: 1200px) {
+  .close-link { font-size: 24px; }
 }
 
 /* Centred, not start-aligned. The Heading 2 *style* says `alignment: left`, so
