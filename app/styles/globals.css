@@ -122,6 +122,19 @@ html[dir="rtl"] body {
 /* Span and Heading 2 carry no breakpoints at all — one size everywhere. */
 .t-span { font-size: 14px; font-weight: 500; line-height: 1.4em; }
 
+/* The "Quotes" style: italic Public Sans 400, centred, Gray/30, 1.2em line, and
+   the same three bands as Body — 16 / 18 / 20. Measured on the build at 20px at
+   1440 and 18px at 900. */
+.t-quote {
+  color: var(--color-gray-30);
+  font-size: 16px;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.2em;
+  text-align: center;
+  margin: 0;
+}
+
 /* The tablet band, 810–1199. */
 @media (min-width: 810px) {
   .t-h1 { font-size: 38px; }
@@ -129,6 +142,7 @@ html[dir="rtl"] body {
   .t-body { font-size: 18px; }
   .t-body-big { font-size: 24px; }
   .t-body-small { font-size: 16px; }
+  .t-quote { font-size: 18px; }
 }
 
 /* Desktop, 1200 and up — the style's own base value. */
@@ -136,6 +150,7 @@ html[dir="rtl"] body {
   .t-h1 { font-size: 48px; }
   .t-h3 { font-size: 28px; }
   .t-body { font-size: 20px; }
+  .t-quote { font-size: 20px; }
 }
 
 /* The hero heading is a type:MIXED node, so it does not simply take Heading 1:
@@ -203,6 +218,14 @@ main {
   flex-direction: column;
   gap: var(--section-gap);
   align-items: center;
+}
+
+/* Testimonials is the one section whose Content is not padded symmetrically:
+   the node reads `pad 192px 0px 48px 0px`. A `pb-12` utility cannot express it
+   because this file loads after Tailwind and `.section`'s own `padding-block`
+   would win — the same ordering trap as the nav pill and the stack grid. */
+.section--short-bottom {
+  padding-bottom: 48px;
 }
 
 /* Centred, not start-aligned. The Heading 2 *style* says `alignment: left`, so
@@ -576,6 +599,22 @@ html[dir="rtl"] .btn-pill {
   margin-top: -21px;
   border-radius: 96px;
   background: var(--color-orange-60);
+}
+
+/* --------------------------------------------------------- slideshow */
+
+/* The track is laid out LTR whatever the page direction, and that is
+   load-bearing rather than cosmetic — the same trap the hero marquee hit. In an
+   RTL document a flex row starts from the right edge, so the physical
+   `translateX(-100%)` that steps a slide walks the track the wrong way and the
+   card leaves the frame entirely: at 390 the Hebrew page showed a heading, the
+   dots, and nothing in between. The slides themselves are put back into the
+   page's direction so their text still reads correctly. */
+.slides-track {
+  direction: ltr;
+}
+html[dir="rtl"] .slides-slide {
+  direction: rtl;
 }
 
 /* ---------------------------------------------------------- hero ticker */
