@@ -9,7 +9,10 @@ export default function Footer({ t }) {
     <footer>
       {/* Its own gutter: the footer sits outside <main>, which is where the page
           gutter now lives. */}
-      <div className="shell px-[var(--page-gutter)] pb-12">
+      {/* 192px is the reference's own gap between the columns block and this
+          row; Contact contributes no bottom padding so this is the whole
+          distance. */}
+      <div className="shell px-[var(--page-gutter)] pb-12 pt-[192px]">
         <div className="cap flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <p className="t-body-small">
             © {year} {site.name}. {t.footer.rights}

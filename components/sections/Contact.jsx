@@ -39,19 +39,19 @@ export default function Contact({ t, locale }) {
   ];
 
   return (
-    <section id="contact" className="section">
+    <section id="contact" className="section section--flush-bottom">
       <div className="cap shell flex w-full flex-col gap-12 md:flex-row md:gap-6">
         {/* The wide first column: the reference puts its "Book a Call" button
             here alongside the details. */}
         <div className="flex flex-col items-start gap-6 md:w-[40%]">
-          <h2 className="t-h4">{t.contact.columns.contact}</h2>
+          <h2 className="t-h4 close-head">{t.contact.columns.contact}</h2>
           <Button href={`mailto:${site.email}`} icon="mail" external>
             {t.contact.cta}
           </Button>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col">
             <a
               href={`mailto:${site.email}`}
-              className="t-body-small link-underline font-medium text-black no-underline"
+              className="close-link link-underline font-medium text-black no-underline"
             >
               {site.email}
             </a>
@@ -59,7 +59,7 @@ export default function Contact({ t, locale }) {
               href={site.maps}
               target="_blank"
               rel="noopener noreferrer"
-              className="t-body-small link-underline text-gray-30 no-underline"
+              className="close-link link-underline text-gray-30 no-underline"
             >
               {t.contact.locationValue}
             </a>
@@ -67,11 +67,11 @@ export default function Contact({ t, locale }) {
         </div>
 
         <nav className="flex flex-col items-start gap-6 md:w-[20%]" aria-label={t.contact.columns.links}>
-          <h2 className="t-h4">{t.contact.columns.links}</h2>
-          <ul className="m-0 flex list-none flex-col gap-2 p-0">
+          <h2 className="t-h4 close-head">{t.contact.columns.links}</h2>
+          <ul className="m-0 flex list-none flex-col p-0">
             {links.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} className="t-body-small link-underline text-gray-30 no-underline hover:text-black">
+                <Link href={l.href} className="close-link link-underline text-gray-30 no-underline hover:text-black">
                   {l.label}
                 </Link>
               </li>
@@ -80,15 +80,15 @@ export default function Contact({ t, locale }) {
         </nav>
 
         <div className="flex flex-col items-start gap-6 md:w-[20%]">
-          <h2 className="t-h4">{t.contact.columns.social}</h2>
-          <ul className="m-0 flex list-none flex-col gap-2 p-0">
+          <h2 className="t-h4 close-head">{t.contact.columns.social}</h2>
+          <ul className="m-0 flex list-none flex-col p-0">
             {social.map((s) => (
               <li key={s.href}>
                 <a
                   href={s.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="t-body-small link-underline text-gray-30 no-underline hover:text-black"
+                  className="close-link link-underline text-gray-30 no-underline hover:text-black"
                 >
                   {s.label}
                 </a>
