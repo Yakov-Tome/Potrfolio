@@ -37,7 +37,6 @@ export default function Nav({ locale, t }) {
   const [active, setActive] = useState("home");
   const [open, setOpen] = useState(false);
   const pillRef = useRef(null);
-  const linkRefs = useRef({});
   const [chip, setChip] = useState({ x: 0, w: 0 });
 
   // Close the phone menu on navigation — a hash link does not remount this.
@@ -94,20 +93,36 @@ export default function Nav({ locale, t }) {
   // Where the chip has to be. Measured from the link's own box inside the pill,
   // so it is correct on first paint, after a font swap, after a resize and in
   // either writing direction.
+  // The active link is found by querying the pill, not by reading a ref map.
+  // The map version placed the chip correctly on a link CLICK and never again:
+  // when the section changed under a scroll, `data-active` moved to the right
+  // link while the chip stayed on Home, at x=3 w=75, and a resize could not
+  // shake it loose either — so the lookup, not the effect, was what failed.
+  // A query has no such state to get out of step with the render.
   useEffect(() => {
     const place = () => {
-      const el = linkRefs.current[current];
       const pill = pillRef.current;
+      const el = pill?.querySelector(`[data-nav="${current}"]`);
       if (!el || !pill) return;
       const e = el.getBoundingClientRect();
       const p = pill.getBoundingClientRect();
-      setChip({ x: Math.round(e.left - p.left), w: Math.round(e.width) });
+      setChip((c) => {
+        const x = Math.round(e.left - p.left);
+        const w = Math.round(e.width);
+        return c.x === x && c.w === w ? c : { x, w };
+      });
     };
     place();
     // Web fonts land after hydration and change every label's width.
     if (document.fonts?.ready) document.fonts.ready.then(place);
+    // Scroll as well as resize: the pill itself does not move, but this is the
+    // one cheap place to re-check that the chip agrees with what is rendered.
     window.addEventListener("resize", place);
-    return () => window.removeEventListener("resize", place);
+    window.addEventListener("scroll", place, { passive: true });
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place);
+    };
   }, [current, t]);
 
   return (
@@ -142,8 +157,8 @@ export default function Nav({ locale, t }) {
             return (
               <Link
                 key={l.id}
-                ref={(el) => (linkRefs.current[l.id] = el)}
                 href={l.href}
+                data-nav={l.id}
                 data-active={isActive}
                 className="nav-link relative shrink-0"
               >
