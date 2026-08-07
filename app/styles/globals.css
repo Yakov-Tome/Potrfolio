@@ -160,6 +160,17 @@ html[dir="rtl"] body {
 .t-h1.hero-h1 { font-weight: 500; }
 .hero-name { font-weight: 700; font-style: italic; }
 
+/* The hero heading has TWO bands, not Heading 1's three. Measured on the build:
+   38px below 810 and 48px at 810 and above — the greeting is 38 on a phone and
+   48 on a 900-wide tablet, where Heading 1 itself would be 32 and 38. Being a
+   MIXED node it does not inherit the style's breakpoints, only its base, which
+   is why it also had to be told 500 above. */
+.t-h1.hero-h1 { font-size: 38px; }
+
+@media (min-width: 810px) {
+  .t-h1.hero-h1 { font-size: 48px; }
+}
+
 /* --------------------------------------------------------------- layout */
 
 /* The page container is FLUID, and this is the design, not an oversight. The

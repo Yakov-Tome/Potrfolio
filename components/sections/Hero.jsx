@@ -74,12 +74,12 @@ import ProfilePhoto from "@/components/ui/ProfilePhoto";
 // `start`/`end` mirrored the whole arrangement on the Hebrew page, which put
 // every render on the wrong side of the portrait.
 const ELEMENTS = [
-  { src: "/3d/orange-pyramid.png", rate: 0.4, rotate: 10, z: 1, mobile: "top-5 right-0", desktop: "md:top-0 md:left-20 md:right-auto" },
-  { src: "/3d/purple-sphere.png", rate: 0.5, rotate: 0, z: 2, mobile: "-top-5 left-1/2 -translate-x-1/2", desktop: "md:top-1/2 md:-translate-y-1/2 md:left-0 md:translate-x-0" },
-  { src: "/3d/blue-cylinder.png", rate: 0.6, rotate: -55, z: 1, mobile: "top-5 left-0", desktop: "md:top-auto md:bottom-0 md:left-20" },
-  { src: "/3d/turquoise-star.png", rate: 0.4, rotate: 0, z: 2, mobile: "-bottom-5 right-0", desktop: "md:bottom-auto md:top-0 md:right-20" },
-  { src: "/3d/lime-green.png", rate: 0.5, rotate: 0, z: 1, mobile: "-bottom-15 left-1/2 -translate-x-1/2", desktop: "md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:right-0 md:left-auto md:translate-x-0" },
-  { src: "/3d/yellow-cube.png", rate: 0.6, rotate: 0, z: 2, mobile: "-bottom-5 left-0", desktop: "md:bottom-0 md:right-20 md:left-auto" },
+  { src: "/3d/orange-pyramid.png", float: 5, rate: 0.4, rotate: 10, z: 1, mobile: "top-5 right-0", desktop: "md:top-0 md:left-20 md:right-auto" },
+  { src: "/3d/purple-sphere.png", float: 4, rate: 0.5, rotate: 0, z: 2, mobile: "-top-5 left-1/2 -translate-x-1/2", desktop: "md:top-1/2 md:-translate-y-1/2 md:left-0 md:translate-x-0" },
+  { src: "/3d/blue-cylinder.png", float: 6, rate: 0.6, rotate: -55, z: 1, mobile: "top-5 left-0", desktop: "md:top-auto md:bottom-0 md:left-20" },
+  { src: "/3d/turquoise-star.png", float: 6, rate: 0.4, rotate: 0, z: 2, mobile: "-bottom-5 right-0", desktop: "md:bottom-auto md:top-0 md:right-20" },
+  { src: "/3d/lime-green.png", float: 4, rate: 0.5, rotate: 0, z: 1, mobile: "-bottom-15 left-1/2 -translate-x-1/2", desktop: "md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:right-0 md:left-auto md:translate-x-0" },
+  { src: "/3d/yellow-cube.png", float: 5, rate: 0.6, rotate: 0, z: 2, mobile: "-bottom-5 left-0", desktop: "md:bottom-0 md:right-20 md:left-auto" },
 ];
 
 const RENDER_BOX = "h-[140px] w-[140px] md:h-[200px] md:w-[200px] lg:h-[280px] lg:w-[280px]";
@@ -188,14 +188,37 @@ function Decor({ el, scrollY, reduce }) {
         animate={reduce ? undefined : { scale: parked ? 0.8 : 1 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
-        <Image
-          src={el.src}
-          alt=""
-          fill
-          sizes="(max-width: 809px) 140px, (max-width: 1199px) 200px, 280px"
-          className="object-contain"
-          priority
-        />
+        {/* The float, on its own layer because the two transforms above are
+            already spoken for: the middle one carries the scroll parallax as a
+            style-bound motion value and the outer one the entrance scale.
+            Measured on the reference at 1440 by sampling every 176ms for 16s:
+            all six drift 11.8px, and every one of them sits at the TOP of its
+            range when still — our static positions equal the reference's
+            minimum to the pixel — so the drift is 0 -> +12 -> 0, downward,
+            never upward. The periods come in pairs: orange and yellow 5s,
+            purple and lime 4s, blue and turquoise 6s. Being coprime-ish they
+            never resolve into one beat, which is what stops six objects
+            drifting in lockstep from reading as one moving sheet. */}
+        <motion.div
+          className="relative h-full w-full"
+          animate={reduce ? undefined : { y: [0, 12, 0] }}
+          // Linear, which is what the measurement says. Quantised to 9 levels
+          // the reference climbs one step per sample almost the whole way and
+          // dwells only ~2 samples of 33 at each extreme; a cubic easeInOut
+          // dwelt 5 of 29 and easeInOutSine 5 of 30 — both read as a hover and
+          // drop rather than a drift. At 12px over 4-6s the turn at each end is
+          // far too slow to see as a corner.
+          transition={{ duration: el.float, repeat: Infinity, ease: "linear" }}
+        >
+          <Image
+            src={el.src}
+            alt=""
+            fill
+            sizes="(max-width: 809px) 140px, (max-width: 1199px) 200px, 280px"
+            className="object-contain"
+            priority
+          />
+        </motion.div>
       </motion.div>
     </motion.div>
   );
@@ -303,8 +326,12 @@ function Clients({ clients }) {
               key={src}
               // radius 96, not `rounded-full` — it is what the reference's own
               // markup carries (`border-radius: 96px` inline on each avatar).
-              className="relative block h-9 w-9 overflow-hidden rounded-[96px] bg-white p-[2px]"
-              style={i > 0 ? { marginInlineStart: -10 } : undefined}
+              // No white ring and no padding: the reference's avatars are bare
+              // 32x32 images, measured identical at 390, 900 and 1440. The ring
+              // was this rebuild's own addition.
+              className="relative block h-8 w-8 overflow-hidden rounded-[96px]"
+              // Pitch 28 on a 32px avatar, i.e. 4px of overlap. It was 10.
+              style={i > 0 ? { marginInlineStart: -4 } : undefined}
             >
               <Image src={src} alt="" width={32} height={32} className="h-8 w-8 rounded-[96px] object-cover" />
             </span>

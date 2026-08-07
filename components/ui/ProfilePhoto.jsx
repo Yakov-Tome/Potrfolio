@@ -1,6 +1,14 @@
 "use client";
 
 import Image from "next/image";
+
+// The asset name carries a version because the optimizer cache is keyed by URL.
+// Replacing profile.png in place left /_next/image?url=%2Fprofile.png&w=... 
+// serving the PREVIOUS square crop long after the file on disk was 2:3 — the
+// page measured 280x420 for the element and 280x280 for the resource, so the
+// square got `cover`-cropped 34px off the top of the head with a black band
+// below. Clearing .next/cache/images fixes it once; changing the name fixes it
+// for every cache between here and the phone, including the visitor's own.
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
@@ -55,7 +63,7 @@ export default function ProfilePhoto({ alt, ringText }) {
     return (
       <div className="profile-card" aria-label={alt}>
         <div className="profile-face profile-front">
-          <Image src="/profile.png" alt={alt} width={560} height={840} priority className="profile-photo" />
+          <Image src="/profile-2.png" alt={alt} width={560} height={840} priority className="profile-photo" />
         </div>
       </div>
     );
@@ -80,7 +88,7 @@ export default function ProfilePhoto({ alt, ringText }) {
             it is the reference's, measured: the img element really is 420 tall
             with `object-fit: cover` and `object-position: 47.9% 24.1%`, and the
             face's overflow eats the bottom third. Served at 2x. */}
-        <Image src="/profile.png" alt={alt} width={560} height={840} priority className="profile-photo" />
+        <Image src="/profile-2.png" alt={alt} width={560} height={840} priority className="profile-photo" />
       </motion.div>
 
       <motion.div
