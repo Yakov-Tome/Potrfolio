@@ -601,6 +601,40 @@ html[dir="rtl"] .btn-pill {
   background: var(--color-orange-60);
 }
 
+/* ------------------------------------------------- services-style list */
+
+/* The big ghosted index in the Services section's left column, measured on the
+   build: 200px at weight 800 in Gray/95 on a 240px line, in a 336x240 block.
+   The title sits 146px below the block's top, so the two overlap and the words
+   read across the lower half of the numeral — that is the whole look, and it
+   only works if the number is out of flow. */
+.svc-number {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  width: 100%;
+  font-size: 200px;
+  font-weight: 800;
+  line-height: 240px;
+  color: var(--color-gray-95);
+  user-select: none;
+}
+.svc-title {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 146px;
+  width: 100%;
+}
+/* 213 is the sticky block's measured height; the 240px numeral overflows it on
+   purpose. No `position` here: this file loads after Tailwind, so declaring one
+   would beat the `sticky` utility on the same element and quietly turn the
+   desktop column into a static block — which is exactly what it did. The markup
+   supplies `sticky` on desktop and `relative` in the per-slot mobile copy, and
+   either one is a containing block for the absolute number and title. */
+.svc-head {
+  height: 213px;
+}
+
 /* --------------------------------------------------------- slideshow */
 
 /* The track is laid out LTR whatever the page direction, and that is

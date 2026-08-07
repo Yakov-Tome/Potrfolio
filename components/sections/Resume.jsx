@@ -1,96 +1,184 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import Reveal from "@/components/motion/Reveal";
+import { motion, useReducedMotion } from "framer-motion";
 import { experience, education, site } from "@/lib/content";
 
 /**
- * Experience, education and details.
+ * Experience, education and details, laid out as the Framer "Services Section".
  *
- * The Framer design has no section for these — but they are real content from
- * the previous site, and dropping them would lose the twelve years of IT work
- * that the About copy refers to. Rather than invent a new visual language, this
- * reuses the design's own card: tinted 48px shell, white 24px inner, 24px
- * padding at both levels.
+ * The design has no section for a CV, so rather than invent a visual language
+ * this takes the one the template already uses for a long numbered list and
+ * puts real content through it. Everything below is the Services contract, read
+ * off the node tree and then measured on cohesion.framer.ai at 1440, 900 and 390.
+ *
+ *   section    white fill, height = heading block + one 100vh slot per item
+ *   heading    Heading 2, centred, full width
+ *   row        max-width 1200, flex row, align-items: flex-start
+ *     left     30% at >=1200, 40% at 810-1199, hidden below 810
+ *              padding 0 24px 0 0, white fill
+ *              a sticky block at top: 96px, 336x213 —
+ *                number  200px / 800 / Gray/95 on a 240px line, out of flow
+ *                title   Heading 3, 146px below the block's top
+ *     right    70% / 60% / 100%, gap 0
+ *       slot   1fr x 100vh, padding 146px 0 24px 24px (48px 0 0 below 810),
+ *              gap 10 (48 below 810), column, centred
+ *         text  Body Big, Gray/30, LEFT aligned — the node says centre and the
+ *               build says left, and the build is the product
+ *         shape 240x240 at every width, sitting ON the slot's bottom edge,
+ *               centred, rotated per item. The node says bottom: 72px; the built
+ *               page puts the 240 box's bottom exactly at the slot's, and the
+ *               build is the product. Measured -1.00 against scroll at every
+ *               depth: these do NOT parallax, they pass with their slot.
+ *   below 810  the left column is dropped and each slot carries its own number
+ *              and title, which is what the Phone frame does with the per-item
+ *              "Service Title" it keeps hidden on desktop.
+ *
+ * The left title swaps as the list runs. Measured against the reference's own
+ * slots — active at scroll offsets 700, 1200, 1700, 2200, 2700 was 01, 02, 03,
+ * 03, 04 — the rule is: the active item is the LAST one whose slot top has
+ * crossed the middle of the viewport. Nothing fades or slides; it is a swap.
  */
+
+// One 3D render per item, each at its own angle, the way the reference gives
+// every service a different shape and rotation.
+const SHAPES = [
+  { src: "/3d/orange-pyramid.png", rotate: -10 },
+  { src: "/3d/blue-cylinder.png", rotate: 0 },
+  { src: "/3d/lime-green.png", rotate: -15 },
+  { src: "/3d/yellow-cube.png", rotate: 0 },
+  { src: "/3d/purple-sphere.png", rotate: -45 },
+  { src: "/3d/turquoise-star.png", rotate: 25 },
+  { src: "/3d/purple-cube.png", rotate: -15 },
+];
+
 export default function Resume({ t }) {
+  const reduce = useReducedMotion();
+  const slotsRef = useRef([]);
+  const [active, setActive] = useState(0);
+
+  // Items are composed from the data the site already holds, so the CV stays a
+  // single source of truth rather than being restated for this layout.
+  const items = [
+    ...experience.map((job) => ({
+      key: job.id,
+      title: t.experience.items[job.id].role,
+      meta: `${job.company} · ${job.period}`,
+      body: t.experience.items[job.id].detail,
+    })),
+    ...education.map((cert) => ({
+      key: cert.id,
+      title: t.education.items[cert.id].name,
+      meta: `${cert.provider} · ${cert.date}`,
+      body: `${t.education.credential}: ${cert.credential}`,
+      link: cert.link,
+      linkLabel: t.resume.viewCertificate,
+    })),
+    {
+      key: "info",
+      title: t.info.title,
+      meta: `${t.info.country}: ${t.info.countryValue} · ${t.info.languages}: ${t.info.languagesValue}`,
+      pairs: [
+        [t.info.fullName, site.name],
+        [t.info.role, t.info.roleValue],
+        [t.info.experienceLabel, t.info.experienceValue],
+        [t.info.specialties, t.info.specialtiesValue],
+        [t.info.freelance, t.info.freelanceValue],
+      ],
+    },
+  ];
+
+  // "the last slot whose top has crossed the middle of the viewport"
+  useEffect(() => {
+    let frame = 0;
+    const pick = () => {
+      frame = 0;
+      const line = window.innerHeight / 2;
+      let found = 0;
+      slotsRef.current.forEach((el, i) => {
+        if (el && el.getBoundingClientRect().top <= line) found = i;
+      });
+      setActive(found);
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(pick);
+    };
+    pick();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [items.length]);
+
+  const num = (i) => String(i + 1).padStart(2, "0");
+
   return (
-    <section id="resume" className="section">
+    <section id="resume" className="section relative bg-white">
       <div className="shell flex w-full flex-col gap-[var(--section-gap)]">
-        {/* Capped at the 1200 the design uses for its own widest content block;
-            the page container itself is fluid now. */}
-        <div className="cap grid gap-6 md:grid-cols-2">
-          {/* Experience */}
-          <Reveal className="tint-card">
-            <div className="inner flex flex-col gap-6">
-              <h2 className="t-h3 font-medium text-black">{t.experience.title}</h2>
-              <ol className="m-0 flex list-none flex-col gap-5 p-0">
-                {experience.map((job) => {
-                  const copy = t.experience.items[job.id];
-                  return (
-                    <li key={job.id} className="border-s-2 border-gray-95 ps-4">
-                      <p className="t-span text-gray-50">{job.period}</p>
-                      <p className="t-body-small font-medium text-black">{copy.role}</p>
-                      <p className="t-span text-blue-70">{job.company}</p>
-                      <p className="t-body-small mt-1">{copy.detail}</p>
-                    </li>
-                  );
-                })}
-              </ol>
+        <h2 className="t-h2 section-title">{t.resume.title}</h2>
+
+        <div className="cap flex md:items-start">
+          {/* 30% from 1200, 40% in the tablet band, gone below 810 — and it has
+              its own white fill in the design so the numeral never shows through
+              from a slot scrolling past behind it. */}
+          <div className="hidden self-stretch bg-white pe-6 md:block md:w-[40%] lg:w-[30%]">
+            <div className="svc-head sticky top-24">
+              <span className="svc-number" aria-hidden="true">
+                {num(active)}
+              </span>
+              <p className="svc-title t-h3 font-medium text-black">{items[active].title}</p>
             </div>
-          </Reveal>
+          </div>
 
-          {/* Education + details */}
-          <div className="flex flex-col gap-6">
-            <Reveal delay={0.08} className="tint-card">
-              <div className="inner flex flex-col gap-6">
-                <h2 className="t-h3 font-medium text-black">{t.education.title}</h2>
-                <ol className="m-0 flex list-none flex-col gap-5 p-0">
-                  {education.map((cert) => {
-                    const copy = t.education.items[cert.id];
-                    return (
-                      <li key={cert.id} className="flex gap-4">
-                        <Image
-                          src={cert.image}
-                          alt=""
-                          width={72}
-                          height={54}
-                          className="h-[54px] w-[72px] shrink-0 rounded-[8px] object-cover"
-                        />
-                        <div className="min-w-0">
-                          <p className="t-span text-gray-50">{cert.date}</p>
-                          <a
-                            href={cert.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="t-body-small link-underline font-medium text-black no-underline"
-                          >
-                            {copy.name}
-                          </a>
-                          <p className="t-span text-blue-70">{cert.provider}</p>
-                          <p className="t-span break-all text-gray-50">
-                            {t.education.credential}: {cert.credential}
-                          </p>
+          <div className="w-full md:w-[60%] lg:w-[70%]">
+            {items.map((item, i) => (
+              <div
+                key={item.key}
+                ref={(el) => (slotsRef.current[i] = el)}
+                className="relative flex h-[100svh] flex-col items-center gap-12 pt-12 md:gap-[10px] md:ps-6 md:pb-6 md:pt-[146px]"
+              >
+                {/* Below 810 the slot carries its own number and title, which is
+                    exactly what the Phone frame turns on per Description. */}
+                <div className="svc-head relative w-full md:hidden">
+                  <span className="svc-number" aria-hidden="true">
+                    {num(i)}
+                  </span>
+                  <p className="svc-title t-h3 font-medium text-black">{item.title}</p>
+                </div>
+
+                <div className="w-full">
+                  <p className="t-span mb-2 text-blue-70">{item.meta}</p>
+                  {item.pairs ? (
+                    <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2">
+                      {item.pairs.map(([k, v]) => (
+                        <div key={k} className="contents">
+                          <dt className="t-body-big text-gray-50">{k}</dt>
+                          <dd className="t-body-big m-0 text-gray-30">{v}</dd>
                         </div>
-                      </li>
-                    );
-                  })}
-                </ol>
-              </div>
-            </Reveal>
+                      ))}
+                    </dl>
+                  ) : (
+                    <p className="t-body-big text-start">{item.body}</p>
+                  )}
+                  {item.link && (
+                    <a
+                      href={item.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="t-body-small link-underline mt-4 inline-flex w-fit font-medium text-black no-underline"
+                    >
+                      {item.linkLabel}
+                    </a>
+                  )}
+                </div>
 
-            <Reveal delay={0.16} className="tint-card">
-              <div className="inner flex flex-col gap-4">
-                <h2 className="t-h3 font-medium text-black">{t.info.title}</h2>
-                <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-6 gap-y-3">
-                  <Row k={t.info.fullName} v={site.name} />
-                  <Row k={t.info.role} v={t.info.roleValue} />
-                  <Row k={t.info.country} v={t.info.countryValue} />
-                  <Row k={t.info.languages} v={t.info.languagesValue} />
-                  <Row k={t.info.experienceLabel} v={t.info.experienceValue} />
-                  <Row k={t.info.specialties} v={t.info.specialtiesValue} />
-                  <Row k={t.info.freelance} v={t.info.freelanceValue} accent />
-                </dl>
+                <Shape shape={SHAPES[i % SHAPES.length]} reduce={reduce} />
               </div>
-            </Reveal>
+            ))}
           </div>
         </div>
       </div>
@@ -98,11 +186,32 @@ export default function Resume({ t }) {
   );
 }
 
-function Row({ k, v, accent = false }) {
+/**
+ * 240x240 at every width — measured 278 rendered for the -10deg item at 1440,
+ * 900 and 390 alike, and 240 x (cos10 + sin10) is 278. Pinned 72px off the slot's
+ * bottom and centred, with the item's own rotation. It carries the design's usual
+ * 0.8 -> 1.0 entrance and nothing else: tracked against scroll the reference's
+ * shapes move at exactly -1.00, so there is no parallax to reproduce.
+ */
+function Shape({ shape, reduce }) {
+  const box = (
+    <div className="absolute bottom-0 left-1/2 h-[240px] w-[240px] -translate-x-1/2" style={{ rotate: `${shape.rotate}deg` }}>
+      <Image src={shape.src} alt="" fill sizes="240px" className="object-contain" />
+    </div>
+  );
+
+  if (reduce) return <div className="decor pointer-events-none">{box}</div>;
+
   return (
-    <>
-      <dt className="t-span text-gray-50">{k}</dt>
-      <dd className={`t-body-small m-0 ${accent ? "font-medium text-green-40" : "text-black"}`}>{v}</dd>
-    </>
+    <motion.div
+      aria-hidden="true"
+      className="decor pointer-events-none absolute inset-0"
+      initial={{ scale: 0.8 }}
+      whileInView={{ scale: 1 }}
+      viewport={{ once: true, amount: "some" }}
+      transition={{ type: "spring", stiffness: 570, damping: 41, mass: 1 }}
+    >
+      {box}
+    </motion.div>
   );
 }
