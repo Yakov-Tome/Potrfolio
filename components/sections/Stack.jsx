@@ -113,16 +113,33 @@ function StackRender({ reduce }) {
 
   const box = "absolute left-1/2 top-0 h-full w-[600px] -translate-x-1/2 lg:w-[720px]";
 
+  // Per band, measured by pinning the "My Stack" heading to the same viewport y
+  // on both builds and reading the cube's top against the grid's:
+  //                starts at        sticks at
+  //   >= 1200      grid top + 20    180
+  //   810-1199     grid top - 110    60
+  // The reference reads +20, +19, +28 at 1440 and -102, -98, -89 at 1100.
+  //
+  // One run in between reported +60 at 1100 and nearly sent this the other way.
+  // It had caught the reference mid-entrance at the 0.8 scale, which moves a
+  // 600px box's rendered top down by exactly 60 — so the same element measured
+  // 158px apart depending only on whether its entrance had finished. Compare
+  // scale states before comparing positions; two probes disagreeing about one
+  // element means one of them caught a different state, not that the truth is
+  // somewhere between them.
+  //
+  // `inset-x-0 bottom-0` with an explicit top rather than `inset-0` plus an
+  // override, so nothing depends on class order.
   return (
-    <div className="decor pointer-events-none absolute inset-0 hidden md:block" aria-hidden="true">
+    <div className="decor pointer-events-none absolute inset-x-0 bottom-0 top-[-110px] hidden md:block lg:top-5" aria-hidden="true">
       {/* The sticky element carries the cube's HEIGHT, and that is what decides
           where it lets go: a sticky box releases when its own bottom reaches the
           bottom of its containing block, so a zero-height one would stay pinned
           720px too long — measured, ours held at 252 all the way to the end of
           the section while the reference had already resumed -1.00. The wrapper
-          is absolutely positioned over the section, so this height costs the
-          layout nothing. */}
-      <div className="sticky top-[180px] h-[600px] lg:h-[720px]">
+          is absolutely positioned over the grid, so this height costs the layout
+          nothing. */}
+      <div className="sticky top-[60px] h-[600px] lg:top-[180px] lg:h-[720px]">
         {reduce ? (
           <div className={box}>{cube}</div>
         ) : (
