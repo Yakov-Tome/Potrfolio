@@ -30,7 +30,6 @@ export default function About({ t }) {
 
   const cubeY = useTransform(scrollYProgress, [0, 1], ["0%", "-18%"]);
   const pyramidY = useTransform(scrollYProgress, [0, 1], ["0%", "-28%"]);
-  const pyramidRotate = useTransform(scrollYProgress, [0, 1], [10, 22]);
 
   return (
     <section ref={ref} id="about" className="relative rounded-[24px] bg-white">
@@ -42,22 +41,38 @@ export default function About({ t }) {
             `left`/`right` here, deliberately, for both.
 
             Computed insets read off the reference, one row per band:
-              phone    cube  top 486 / left 0 / right 0 / bottom 0   -> 358 sq
+              phone    cube  358x358, top 486, inset-x 0
                        pyramid 240x240, top 96, centred, rot 10
-              tablet   cube  top 264 / left 48 / right 48 / bottom -120 -> 756
+              tablet   cube  756x756, top 264, inset-x 48
                        pyramid 240x240, top 240, centred, rot 10
-              desktop  cube  640x640, left 120, centreY
-                       pyramid 640x640, right 120, centreY, rot 10
+              desktop  cube  640x640, left 120, centreY, drawn at 0.85
+                       pyramid 640x640, right 120, centreY, rot 10, at 0.85
+
+            The two square boxes come from `aspect-square` on a width-driven
+            box, not from a top/bottom pair. Stretching between top and bottom
+            happened to give 358 and 756 at a 900-tall viewport and nothing like
+            them at any other height; the design's boxes are squares.
+
+            The 0.85 is measured, not chosen: at 1440 the reference's cube
+            occupies 545 of its 640 box (0.852) and its pyramid 631, which is
+            0.851 x the 1.158 a 10-degree rotation adds. It applies at desktop
+            only — at 900 and 390 both render at their full authored size. With
+            it, our cube lands at x192 and the pyramid at x661 against the
+            reference's 192 and 660.
+
+            The pyramid's rotation is CONSTANT at 10 degrees. It used to run
+            10 -> 22 across the section, which grew its rendered box from 751 to
+            833 while the reference held 631 flat from the entrance onward.
             The rebuild ran the desktop placement from 810 up, so the whole
             tablet band had two 640px renders where the design has one wide
             hanging cube and one small centred pyramid. */}
         <Float period={4.8}>
           <motion.div
             aria-hidden="true"
-            className="decor absolute inset-x-0 bottom-0 top-[486px] md:inset-x-12 md:bottom-[-120px] md:top-[264px] lg:inset-auto lg:left-30 lg:top-1/2 lg:h-[640px] lg:w-[640px] lg:-translate-y-1/2"
+            className="decor absolute inset-x-0 top-[486px] aspect-square md:inset-x-12 md:top-[264px] lg:inset-auto lg:left-30 lg:top-1/2 lg:aspect-auto lg:h-[640px] lg:w-[640px] lg:-translate-y-1/2"
             style={reduce ? {} : { y: cubeY }}
           >
-            <Image src="/3d/purple-cube.png" alt="" fill sizes="(max-width: 1199px) 100vw, 640px" className="object-contain" />
+            <Image src="/3d/purple-cube.png" alt="" fill sizes="(max-width: 1199px) 100vw, 640px" className="object-contain lg:scale-[0.85]" />
           </motion.div>
         </Float>
 
@@ -65,9 +80,9 @@ export default function About({ t }) {
           <motion.div
             aria-hidden="true"
             className="decor absolute left-1/2 top-24 h-[240px] w-[240px] -translate-x-1/2 md:top-60 lg:inset-auto lg:left-auto lg:right-30 lg:top-1/2 lg:h-[640px] lg:w-[640px] lg:translate-x-0 lg:-translate-y-1/2"
-            style={reduce ? { rotate: 10 } : { y: pyramidY, rotate: pyramidRotate }}
+            style={reduce ? { rotate: 10 } : { y: pyramidY, rotate: 10 }}
           >
-            <Image src="/3d/blue-pyramid.png" alt="" fill sizes="(max-width: 1199px) 240px, 640px" className="object-contain" />
+            <Image src="/3d/blue-pyramid.png" alt="" fill sizes="(max-width: 1199px) 240px, 640px" className="object-contain lg:scale-[0.85]" />
           </motion.div>
         </Float>
 
