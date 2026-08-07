@@ -34,8 +34,6 @@ export default function Stack({ t, locale }) {
     // `hidden` would make this a scroll container and kill that outright. Clip
     // still keeps the cube inside the section so it cannot ride into Resume.
     <section id="stack" className="section relative overflow-clip">
-      <StackRender reduce={reduce} />
-
       <div className="shell relative z-10 flex flex-col gap-[var(--section-gap)]">
         <h2 className="t-h2 section-title">{t.stack.title}</h2>
 
@@ -51,7 +49,8 @@ export default function Stack({ t, locale }) {
             bug behind the cube sliding off the left edge in Hebrew — `start-1/2`
             resolves to `right: 50%` in RTL while `-translate-x-1/2` stays
             physical, so the two compose into a box a full width off-centre. */}
-        <div className="cap grid grid-cols-1 gap-4 md:[--cap:810px] md:grid-cols-2 md:gap-6 lg:[--cap:1200px] lg:grid-cols-3">
+        <div className="cap relative grid grid-cols-1 gap-4 md:[--cap:810px] md:grid-cols-2 md:gap-6 lg:[--cap:1200px] lg:grid-cols-3">
+          <StackRender reduce={reduce} />
           {skills.map((skill) => (
             <ScrollScale key={skill.id} reduce={reduce}>
               <StackCard
@@ -95,6 +94,17 @@ export default function Stack({ t, locale }) {
  * Three transforms, three wrappers, deliberately: sticky cannot live on an
  * element whose transform is being animated, and the float and the entrance
  * cannot share one transform either.
+ *
+ * The wrapper spans the GRID, not the section, and that is the difference
+ * between this working and it wrecking the layout. In document space the
+ * reference's cube starts at the grid's top +16, and the grid begins 334px into
+ * the section (192 of padding, a 46px heading, a 96px gap). Hung off the section
+ * instead, the cube starts 350px too high: it is already pinned and at full size
+ * the moment the heading appears, sitting over "My Stack" instead of rising
+ * behind the cards. Anchoring to the grid also fixes the release — a sticky box
+ * lets go at its container's bottom, and the grid's bottom is where the
+ * reference lets go (grid ends 6956, cube 720 tall at top 180, so 6056, which is
+ * inside the measured 5859..6189 bracket).
  */
 function StackRender({ reduce }) {
   const cube = (
