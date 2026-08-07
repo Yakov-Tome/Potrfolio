@@ -55,11 +55,18 @@ export default function Testimonials({ t }) {
     // 100vh and a 48px bottom, both from the node's Content frame — the section
     // is one viewport tall like About's header and Hero, not content-height.
     <section id="testimonials" className="section section--short-bottom min-h-[100svh] rounded-[24px] bg-white">
-      <div className="shell flex w-full flex-col gap-[var(--section-gap)]">
+      {/* 96px between the heading and the slider in EVERY band — the reference
+          measures a 96 gap at 390 where its other sections use 48 — and the
+          block below stretches to the section's bottom padding: its slider is
+          358x614 at y238 in a 900-tall section, i.e. 900 minus 96 of top pad,
+          46 of heading, the 96 gap and 48 of bottom. Ours was content-height,
+          which left the dots at y474 against the reference's y822 and 400px of
+          white below them. */}
+      <div className="shell flex w-full flex-1 flex-col gap-24">
         <h2 className="t-h2 section-title">{data.title}</h2>
 
         <div
-          className="relative overflow-hidden pb-10"
+          className="relative flex flex-1 flex-col justify-between overflow-hidden"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
           onFocusCapture={() => setPaused(true)}
@@ -95,7 +102,12 @@ export default function Testimonials({ t }) {
                       alt=""
                       width={96}
                       height={96}
-                      className="h-24 w-24 rounded-full object-cover"
+                      // No radius: the reference's testimonial avatars measure
+                      // border-radius 0 with no rounded wrapper, because its
+                      // images are cut-out figures. Our placeholders draw their
+                      // own circle, so this looks the same today — worth knowing
+                      // before swapping in a photograph.
+                      className="h-24 w-24 object-cover"
                     />
                     <figcaption className="flex flex-col items-center">
                       <span className="t-h3 font-medium text-black">{item.name}</span>
@@ -108,10 +120,18 @@ export default function Testimonials({ t }) {
             ))}
           </motion.div>
 
-          {/* 10x10 dots in Blue/70, the active one opaque and the rest at 0.2 —
-              measured. Real buttons rather than the reference's bare divs, so
-              the slideshow is reachable without a pointer. */}
-          <div className="absolute inset-x-0 bottom-0 flex items-center justify-center">
+          {/* 10x10 dots in Blue/70, the active one opaque and the rest at 0.2,
+              on a 20px pitch — measured at x 170/190/210 at 390, which ours
+              already matched. Real buttons rather than the reference's bare
+              divs, so the slideshow is reachable without a pointer. They sit at
+              the bottom of the block rather than absolutely, which is what
+              `justify-between` above is for. */}
+          {/* 10px clear of the block's bottom edge: the reference's dots row is
+              812..842 in a block that ends at 852. Measured at 390 only — the
+              reference's testimonials heading could not be located at 900 or
+              1440 by any finder that works at 390, so this one number is
+              carried across rather than confirmed per band. */}
+          <div className="flex items-center justify-center pb-[10px]">
             {data.items.map((_, i) => (
               <button
                 key={i}
