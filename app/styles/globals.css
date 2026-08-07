@@ -660,12 +660,20 @@ html[dir="rtl"] .btn-pill {
    The title sits 146px below the block's top, so the two overlap and the words
    read across the lower half of the numeral — that is the whole look, and it
    only works if the number is out of flow. */
+/* 106px, not the design's 200. Its numeral is a two-character sequence and
+   ours is a four-digit year: "01" measures 224px of ink at 200px against a 336
+   column, where "2024" measures 539 and would run a hundred pixels out of the
+   column and under the slot text. 102 keeps it inside the NARROWEST box this
+   watermark ever gets, which is 281 at exactly 810 — the tablet column is 40%
+   of a 762 shell less its 24 of padding — so one value holds at every width.
+   106 was measured first and overflowed that box by 7px. The 240px line box is untouched, which is what keeps
+   the title crossing the glyphs at 146 the way the design has it. */
 .svc-number {
   position: absolute;
   inset-inline-start: 0;
   top: 0;
   width: 100%;
-  font-size: 200px;
+  font-size: 102px;
   font-weight: 800;
   line-height: 240px;
   color: var(--color-gray-95);

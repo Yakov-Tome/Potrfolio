@@ -60,21 +60,30 @@ export default function Resume({ t }) {
 
   // Items are composed from the data the site already holds, so the CV stays a
   // single source of truth rather than being restated for this layout.
-  const items = [
+  // Jobs and certificates run as ONE chronological list, oldest first, rather
+  // than as two blocks. The numeral is the slot's own start year, so the list
+  // has to be ordered by that year or the watermarks would count backwards.
+  const dated = [
     ...experience.map((job) => ({
       key: job.id,
+      start: job.start,
       title: t.experience.items[job.id].role,
       meta: `${job.company} · ${job.period}`,
       body: t.experience.items[job.id].detail,
     })),
     ...education.map((cert) => ({
       key: cert.id,
+      start: cert.start,
       title: t.education.items[cert.id].name,
       meta: `${cert.provider} · ${cert.date}`,
       body: `${t.education.credential}: ${cert.credential}`,
       link: cert.link,
       linkLabel: t.resume.viewCertificate,
     })),
+  ].sort((a, b) => a.start.localeCompare(b.start));
+
+  const items = [
+    ...dated,
     {
       key: "info",
       title: t.info.title,
@@ -114,7 +123,11 @@ export default function Resume({ t }) {
     };
   }, [items.length]);
 
-  const num = (i) => String(i + 1).padStart(2, "0");
+  // The design's numeral is a sequence — 01, 02, 03. Here it is the year the
+  // slot begins, which is what makes the column read as a timeline rather than
+  // as a count. Details carries no year and so shows nothing: it is not a point
+  // on that timeline, and inventing one would be the only way to fill it.
+  const num = (i) => items[i].start?.slice(0, 4) ?? "";
 
   return (
     <section id="resume" className="section relative bg-white">
