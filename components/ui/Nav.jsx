@@ -46,6 +46,9 @@ export default function Nav({ locale, t }) {
     { id: "home", href: `/${locale}`, label: t.nav.home },
     { id: "about", href: `/${locale}#about`, label: t.nav.about },
     { id: "stack", href: `/${locale}#stack`, label: t.nav.stack },
+    // Sits where "Services" sits in the reference's nav, because this is the
+    // section built in that layout.
+    { id: "resume", href: `/${locale}#resume`, label: t.nav.resume },
     { id: "projects", href: `/${locale}#projects`, label: t.nav.projects },
     { id: "blog", href: `/${locale}/blog`, label: t.nav.blog },
     { id: "contact", href: `/${locale}#contact`, label: t.nav.contact },
