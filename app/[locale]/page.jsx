@@ -24,7 +24,7 @@ export default async function Home({ params }) {
       <Stack t={t} locale={locale} />
       <Resume t={t} />
       <Projects t={t} />
-      <Contact t={t} />
+      <Contact t={t} locale={locale} />
     </>
   );
 }

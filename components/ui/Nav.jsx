@@ -22,9 +22,10 @@ import LocaleSwitch from "./LocaleSwitch";
  *   active   radius 96 · fill rgb(249,71,6) (Orange/60) · white label · 42px tall
  *   a second pill sits to its right inside the same centred group
  *
- * The active chip is ONE element that moves between links — `layoutId` — not a
- * background per link. That is what makes the reference's nav read as a single
- * object rather than as five buttons.
+ * The active chip is ONE element that moves between links, not a background per
+ * link. That is what makes the reference's nav read as a single object rather
+ * than as five buttons. It is positioned from a measurement rather than with
+ * `layoutId` — see the note at the chip itself for why.
  *
  * The bar is fixed and the page runs underneath it, which is the only reason
  * the 10px blur has anything to blur.

@@ -34,9 +34,12 @@ export default function Projects({ t }) {
           {projects.map((p) => {
             const copy = t.projects.items[p.id];
             return (
-              <Reveal key={p.id} as="li" fade className="group flex flex-col gap-3 pb-6">
-                {/* The tint shell holds the shot and nothing else. */}
-                <div className="tint-card">
+              <Reveal key={p.id} as="li" fade className="group flex flex-col items-center gap-3 pb-6">
+                {/* The tint shell holds the shot and nothing else. `w-full` is required
+                    now the card centres its children: without it the shell shrinks to
+                    its content, and the content is an absolutely-positioned image, so
+                    it collapsed to 38x38. */}
+                <div className="tint-card w-full">
                   <div className="relative aspect-3/2 w-full overflow-hidden rounded-[24px] bg-gray-95">
                     <Image
                       src={p.image}
@@ -49,7 +52,7 @@ export default function Projects({ t }) {
                 </div>
 
                 {/* 6px gap and a 24px inline inset, matching the caption block. */}
-                <div className="flex flex-col gap-1.5 px-6">
+                <div className="flex w-full flex-col items-start gap-1.5 px-6">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="t-span rounded-full bg-blue-70/10 px-3 py-1.5 text-blue-70">{copy.role}</span>
                     <span className="t-span rounded-full bg-gray-95 px-3 py-1.5">{p.stack}</span>

@@ -1,51 +1,101 @@
+import Link from "next/link";
 import Button from "@/components/ui/Button";
-import Reveal from "@/components/motion/Reveal";
 import { site } from "@/lib/content";
 
 /**
- * Contact, closing the page the way the Framer design does — a full-height
- * section that the rest of the page scrolls away to reveal.
+ * The page's closing region, in the shape the reference closes with.
  *
- * The previous site posted through EmailJS from the browser, which put a
- * public key in the bundle and gave the visitor no copy of what they sent.
- * These are direct links instead: the message goes from their own mail client,
- * and they keep it in their sent folder.
+ * Measured on the build at 1440: the block is capped at 1200 and centred (x120,
+ * width 1200), laid out as a row of columns with a 24px gap, each column headed
+ * at 24px — Heading 4 — and the first one wide (490 against ~245 for the rest)
+ * because it carries the call to action as well as the details. 192px below the
+ * columns sits the copyright row, which is Footer.jsx.
+ *
+ * There is no tinted card here and nothing is centred: the reference's closing
+ * region is plain left-aligned columns. This used to be a centred tint-card
+ * panel, which was the rebuild's own invention.
+ *
+ * Three columns rather than the reference's four. Its fourth is "Legal", and
+ * filling that would mean publishing a privacy policy and terms that do not
+ * exist — the geometry is the design's, the content stays true.
+ *
+ * The links are real destinations and the mail goes from the visitor's own
+ * client, so they keep a copy in their sent folder; the previous site posted
+ * through EmailJS, which put a public key in the bundle and gave the sender
+ * nothing.
  */
-export default function Contact({ t }) {
-  const channels = [
-    { label: t.contact.email, value: site.email, href: `mailto:${site.email}` },
-    { label: t.contact.github, value: "github.com/yakov-tome", href: site.github, external: true },
-    { label: t.contact.linkedin, value: "linkedin.com/in/yakov-tome", href: site.linkedin, external: true },
-    { label: t.contact.location, value: t.contact.locationValue, href: site.maps, external: true },
+export default function Contact({ t, locale }) {
+  const links = [
+    { href: `/${locale}#about`, label: t.nav.about },
+    { href: `/${locale}#stack`, label: t.nav.stack },
+    { href: `/${locale}#resume`, label: t.nav.resume },
+    { href: `/${locale}#projects`, label: t.nav.projects },
+    { href: `/${locale}/blog`, label: t.nav.blog },
+  ];
+
+  const social = [
+    { href: site.github, label: "GitHub" },
+    { href: site.linkedin, label: "LinkedIn" },
   ];
 
   return (
     <section id="contact" className="section">
-      <div className="shell flex w-full flex-col gap-[var(--section-gap)]">
-        <Reveal className="tint-card cap">
-          <div className="inner flex flex-col items-center gap-8 py-12 text-center">
-            <h2 className="t-h2">{t.contact.title}</h2>
-            <p className="t-body-big max-w-[600px]">{t.contact.lead}</p>
-            <Button href={`mailto:${site.email}`} icon="mail" external>
-              {t.contact.cta}
-            </Button>
-
-            <ul className="m-0 grid w-full list-none grid-cols-1 gap-4 p-0 pt-4 md:grid-cols-4">
-              {channels.map((c) => (
-                <li key={c.label} className="flex flex-col items-center gap-1">
-                  <span className="t-span text-gray-50">{c.label}</span>
-                  <a
-                    href={c.href}
-                    {...(c.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                    className="t-body-small link-underline font-medium text-black no-underline"
-                  >
-                    {c.value}
-                  </a>
-                </li>
-              ))}
-            </ul>
+      <div className="cap shell flex w-full flex-col gap-12 md:flex-row md:gap-6">
+        {/* The wide first column: the reference puts its "Book a Call" button
+            here alongside the details. */}
+        <div className="flex flex-col items-start gap-6 md:w-[40%]">
+          <h2 className="t-h4">{t.contact.columns.contact}</h2>
+          <Button href={`mailto:${site.email}`} icon="mail" external>
+            {t.contact.cta}
+          </Button>
+          <div className="flex flex-col gap-2">
+            <a
+              href={`mailto:${site.email}`}
+              className="t-body-small link-underline font-medium text-black no-underline"
+            >
+              {site.email}
+            </a>
+            <a
+              href={site.maps}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="t-body-small link-underline text-gray-30 no-underline"
+            >
+              {t.contact.locationValue}
+            </a>
           </div>
-        </Reveal>
+        </div>
+
+        <nav className="flex flex-col items-start gap-6 md:w-[20%]" aria-label={t.contact.columns.links}>
+          <h2 className="t-h4">{t.contact.columns.links}</h2>
+          <ul className="m-0 flex list-none flex-col gap-2 p-0">
+            {links.map((l) => (
+              <li key={l.href}>
+                <Link href={l.href} className="t-body-small link-underline text-gray-30 no-underline hover:text-black">
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="flex flex-col items-start gap-6 md:w-[20%]">
+          <h2 className="t-h4">{t.contact.columns.social}</h2>
+          <ul className="m-0 flex list-none flex-col gap-2 p-0">
+            {social.map((s) => (
+              <li key={s.href}>
+                <a
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="t-body-small link-underline text-gray-30 no-underline hover:text-black"
+                >
+                  {s.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );

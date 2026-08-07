@@ -3,25 +3,17 @@ import { site } from "@/lib/content";
 export default function Footer({ t }) {
   const year = new Date().getFullYear();
   return (
-    <footer className="border-t border-gray-95">
+    // The copyright row, 192px below the closing columns — measured on the
+    // reference, whose region is 456 tall for 245 of columns and a 19px row.
+    // No top border there, so none here.
+    <footer>
       {/* Its own gutter: the footer sits outside <main>, which is where the page
           gutter now lives. */}
-      <div className="shell px-[var(--page-gutter)] py-10">
+      <div className="shell px-[var(--page-gutter)] pb-12">
         <div className="cap flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <p className="t-body-small">
             © {year} {site.name}. {t.footer.rights}
           </p>
-          <div className="flex items-center gap-6">
-            <a className="t-body-small link-underline text-gray-30 no-underline hover:text-black" href={site.github} target="_blank" rel="noopener noreferrer">
-              GitHub
-            </a>
-            <a className="t-body-small link-underline text-gray-30 no-underline hover:text-black" href={site.linkedin} target="_blank" rel="noopener noreferrer">
-              LinkedIn
-            </a>
-            <a className="t-body-small link-underline text-gray-30 no-underline hover:text-black" href={`mailto:${site.email}`}>
-              {site.email}
-            </a>
-          </div>
           <p className="t-span">{t.footer.built}</p>
         </div>
       </div>
