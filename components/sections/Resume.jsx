@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import Shape3D from "@/components/ui/Shape3D";
 import { motion, useReducedMotion } from "framer-motion";
 import { experience, education, site } from "@/lib/content";
 
@@ -209,7 +209,7 @@ export default function Resume({ t }) {
 function Shape({ shape, reduce }) {
   const box = (
     <div className="absolute bottom-0 left-1/2 h-[240px] w-[240px] -translate-x-1/2" style={{ rotate: `${shape.rotate}deg` }}>
-      <Image src={shape.src} alt="" fill sizes="240px" className="object-contain" />
+      <Shape3D src={shape.src} sizes="240px" />
     </div>
   );
 

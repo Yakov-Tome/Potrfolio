@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import Image from "next/image";
+import Shape3D from "@/components/ui/Shape3D";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import StackCard from "@/components/ui/StackCard";
 import { APPEAR_SPRING } from "@/components/motion/Reveal";
@@ -108,7 +108,7 @@ export default function Stack({ t, locale }) {
  */
 function StackRender({ reduce }) {
   const cube = (
-    <Image src="/3d/turquoise-cube.png" alt="" fill sizes="(max-width: 1199px) 600px, 720px" className="object-contain" />
+    <Shape3D src="/3d/turquoise-cube.png" sizes="(max-width: 1199px) 600px, 720px" />
   );
 
   const box = "absolute left-1/2 top-0 h-full w-[600px] -translate-x-1/2 lg:w-[720px]";

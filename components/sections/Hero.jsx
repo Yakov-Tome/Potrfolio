@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Shape3D from "@/components/ui/Shape3D";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import ProfilePhoto from "@/components/ui/ProfilePhoto";
@@ -210,13 +211,10 @@ function Decor({ el, scrollY, reduce }) {
           // far too slow to see as a corner.
           transition={{ duration: el.float, repeat: Infinity, ease: "linear" }}
         >
-          <Image
+          <Shape3D
             src={el.src}
-            alt=""
-            fill
             sizes="(max-width: 809px) 140px, (max-width: 1199px) 200px, 280px"
-            className="object-contain"
-            priority
+            eager
           />
         </motion.div>
       </motion.div>

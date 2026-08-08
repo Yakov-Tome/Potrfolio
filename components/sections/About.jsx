@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import Shape3D from "@/components/ui/Shape3D";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import { site } from "@/lib/content";
@@ -72,7 +72,7 @@ export default function About({ t }) {
             className="decor absolute inset-x-0 top-[486px] aspect-square md:inset-x-12 md:top-[264px] lg:inset-auto lg:left-30 lg:top-1/2 lg:aspect-auto lg:h-[640px] lg:w-[640px] lg:-translate-y-1/2"
             style={reduce ? {} : { y: cubeY }}
           >
-            <Image src="/3d/purple-cube.png" alt="" fill sizes="(max-width: 1199px) 100vw, 640px" className="object-contain lg:scale-[0.85]" />
+            <Shape3D src="/3d/purple-cube.png" sizes="(max-width: 1199px) 100vw, 640px" eager className="lg:scale-[0.85]" />
           </motion.div>
         </Float>
 
@@ -82,7 +82,7 @@ export default function About({ t }) {
             className="decor absolute left-1/2 top-24 h-[240px] w-[240px] -translate-x-1/2 md:top-60 lg:inset-auto lg:left-auto lg:right-30 lg:top-1/2 lg:h-[640px] lg:w-[640px] lg:translate-x-0 lg:-translate-y-1/2"
             style={reduce ? { rotate: 10 } : { y: pyramidY, rotate: 10 }}
           >
-            <Image src="/3d/blue-pyramid.png" alt="" fill sizes="(max-width: 1199px) 240px, 640px" className="object-contain lg:scale-[0.85]" />
+            <Shape3D src="/3d/blue-pyramid.png" sizes="(max-width: 1199px) 240px, 640px" eager className="lg:scale-[0.85]" />
           </motion.div>
         </Float>
 
