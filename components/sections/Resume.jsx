@@ -53,7 +53,7 @@ const SHAPES = [
   { src: "/3d/purple-cube.png", rotate: -15 },
 ];
 
-export default function Resume({ t }) {
+export default function Resume({ t, locale }) {
   const reduce = useReducedMotion();
   const slotsRef = useRef([]);
   const [active, setActive] = useState(0);
@@ -63,19 +63,45 @@ export default function Resume({ t }) {
   // Jobs and certificates run as ONE chronological list, oldest first, rather
   // than as two blocks. The numeral is the slot's own start year, so the list
   // has to be ordered by that year or the watermarks would count backwards.
+  // Months in the reading language. Formatting a fixed "YYYY-MM" is
+  // deterministic — no clock is read — so the server and the client agree and
+  // hydration is quiet. The dates used to be one English display string, which
+  // left the Hebrew page reading "Oct 2006 - Oct 2009".
+  // Two precisions, because the sources have two. The CV PDF gives years for
+  // the four roles, so those print as "2006 – 2009"; the certificates carry a
+  // real credential date, so those print as "Sep 2024". Formatting a fixed
+  // string is deterministic — no clock is read — so the server and the client
+  // agree and hydration is quiet.
+  const fmt = (value) => {
+    const [y, m] = value.split("-");
+    if (!m) return y;
+    // en-US, not en-GB: en-GB abbreviates September to "Sept" where every other
+    // month is three letters, so one date in the list would be a character
+    // wider than the rest.
+    return new Intl.DateTimeFormat(locale === "he" ? "he-IL" : "en-US", {
+      month: "short",
+      year: "numeric",
+      // Fixed to UTC so the rendered month cannot slide by a timezone.
+      timeZone: "UTC",
+    }).format(new Date(Date.UTC(Number(y), Number(m) - 1, 1)));
+  };
+  const span = (from, to) => `${fmt(from)} – ${to ? fmt(to) : t.experience.present}`;
+
   const dated = [
     ...experience.map((job) => ({
       key: job.id,
       start: job.start,
       title: t.experience.items[job.id].role,
-      meta: `${job.company} · ${job.period}`,
+      // The dictionary may override the organisation — the IDF slot does,
+      // because it is military service rather than an employer.
+      meta: `${t.experience.items[job.id].company ?? job.company} · ${span(job.start, job.end)}`,
       body: t.experience.items[job.id].detail,
     })),
     ...education.map((cert) => ({
       key: cert.id,
       start: cert.start,
       title: t.education.items[cert.id].name,
-      meta: `${cert.provider} · ${cert.date}`,
+      meta: `${cert.provider} · ${fmt(cert.start)}`,
       body: `${t.education.credential}: ${cert.credential}`,
       link: cert.link,
       linkLabel: t.resume.viewCertificate,
@@ -94,6 +120,10 @@ export default function Resume({ t }) {
         [t.info.experienceLabel, t.info.experienceValue],
         [t.info.specialties, t.info.specialtiesValue],
         [t.info.freelance, t.info.freelanceValue],
+        // From the CV's own Hobbies block. The phone number on it is
+        // deliberately NOT here: publishing a personal number is a decision
+        // with consequences, and nobody asked for it.
+        [t.info.interests, t.info.interestsValue],
       ],
     },
   ];

@@ -22,7 +22,7 @@ export default async function Home({ params }) {
       <About t={t} />
       <Testimonials t={t} />
       <Stack t={t} locale={locale} />
-      <Resume t={t} />
+      <Resume t={t} locale={locale} />
       <Projects t={t} />
       <Contact t={t} locale={locale} />
     </>
