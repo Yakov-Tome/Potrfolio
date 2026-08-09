@@ -21,7 +21,12 @@ export default async function BlogIndex({ params }) {
   return (
     <section className="section">
       <div className="shell flex w-full flex-col gap-[var(--section-gap)]">
-        <header className="cap flex flex-col gap-4">
+        {/* Centred, like every other 38px heading on this site. The reference
+            has no blog page to copy, but it does have a rule: all six of its
+            section headings are centred and the only left-aligned ones are the
+            24px column headings in the closing region. A 38px heading aligned
+            left read as a different template. */}
+        <header className="cap flex flex-col items-center gap-4 text-center">
           <h1 className="t-h2">{t.blog.title}</h1>
           <p className="t-body-big">{t.blog.lead}</p>
         </header>

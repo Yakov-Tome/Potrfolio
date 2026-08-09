@@ -324,12 +324,16 @@ function Clients({ clients }) {
               key={src}
               // radius 96, not `rounded-full` — it is what the reference's own
               // markup carries (`border-radius: 96px` inline on each avatar).
-              // No white ring and no padding: the reference's avatars are bare
-              // 32x32 images, measured identical at 390, 900 and 1440. The ring
-              // was this rebuild's own addition.
-              className="relative block h-8 w-8 overflow-hidden rounded-[96px]"
-              // Pitch 28 on a 32px avatar, i.e. 4px of overlap. It was 10.
-              style={i > 0 ? { marginInlineStart: -4 } : undefined}
+              // The white ring IS in the design. A probe that walked to
+              // imgs[0].parentElement reported a bare 32x32 and this was briefly
+              // rebuilt without one; the reference's markup settles it —
+              //   <div style="background-color: rgb(255,255,255); border-radius: 96px">
+              // wrapping a 32x32 image inset by 2px, so the ring is 36x36, and
+              // the row is 36 tall because of it.
+              className="relative block h-9 w-9 overflow-hidden rounded-[96px] bg-white p-[2px]"
+              // Pitch 28 measured off the images (x 612, 640, 668) on a 36px
+              // ring, so the rings overlap by 8. It was -10, which gave 26.
+              style={i > 0 ? { marginInlineStart: -8 } : undefined}
             >
               <Image src={src} alt="" width={32} height={32} className="h-8 w-8 rounded-[96px] object-cover" />
             </span>
