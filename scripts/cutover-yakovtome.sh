@@ -31,19 +31,67 @@ IP=$(curl -s -m 10 https://api.ipify.org)
 say() { printf '\n\033[1m%s\033[0m\n' "$*"; }
 
 say "1/5  DNS"
+# Every authoritative nameserver, sampled several times, and they must ALL
+# agree. A public resolver is the wrong thing to ask twice over: it answers
+# from a cache that can be hours stale, and Let's Encrypt does not use it — it
+# resolves from the root down and can land on any of these servers.
+#
+# The sampling is not paranoia. On the first attempt at this move, box.co.il's
+# ns1 (129.159.130.37) answered from two different zone versions on the same
+# IP, one of them still carrying the pre-change serial and the old Vercel
+# address, while claiming authority. Asking it once would have looked fine
+# every other time, and the run would then have failed validation against
+# Vercel — or worse, succeeded, and sent a third of visitors there.
+NS_IPS=$(for ns in $(dig +short NS "$NEW" | sed 's/\.$//'); do dig +short A "$ns"; done | sort -u)
+[ -n "$NS_IPS" ] || { echo "  could not find the nameservers for $NEW"; exit 1; }
+
+# A query that times out is not a pass. `dig` exits 9 on "no reply from
+# server", and under `set -e` an unguarded command substitution took the whole
+# run down with it — which is how this gate first failed, with exit 9 and two
+# lines of output, looking like a DNS verdict when it was a dead script.
+# `|| true` keeps the run alive and the empty answer counts as a mismatch.
+ask() { dig +short A "$1" @"$2" +time=3 +tries=1 2>/dev/null | tail -1 || true; }
+
+dns_ok=1
 for host in "$NEW" "www.$NEW"; do
-  got=$(dig +short A "$host" @1.1.1.1 | tail -1)
-  if [ "$got" != "$IP" ]; then
-    echo "  $host -> ${got:-(nothing)}, expected $IP"
-    echo
-    echo "  Set these at box.co.il and wait for them to propagate:"
-    echo "     A   @     $IP"
-    echo "     A   www   $IP"
-    echo "  (remove the Vercel records first: A @ 76.76.21.21 and the www CNAME)"
-    exit 1
-  fi
-  echo "  $host -> $got  ok"
+  for ip in $NS_IPS; do
+    answers=""
+    # 20 samples, not 5. This nameserver set answers from more than one zone
+    # version behind a single IP, and a short run of clean replies means only
+    # that the good instances were the ones that answered.
+    for _ in $(seq 1 20); do
+      answers="$answers $(ask "$host" "$ip")"
+    done
+    # Two different failures, and only one of them is a reason to stop. A query
+    # that returns nothing is the server rate-limiting a burst of 20 — harmless,
+    # and the retry will answer. A query that returns the OLD address is the
+    # thing this gate exists to catch. So: zero wrong addresses, and enough
+    # valid replies to trust the sample.
+    ips=$(printf '%s' "$answers" | tr ' ' '\n' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' || true)
+    n_valid=$(printf '%s\n' "$ips" | grep -c . || true)
+    n_wrong=$(printf '%s\n' "$ips" | grep -vc "^$IP$" || true)
+    if [ "$n_wrong" -eq 0 ] && [ "$n_valid" -ge 16 ]; then
+      printf '  %-22s via %-16s ok (%s/20 answered, none stale)\n' "$host" "$ip" "$n_valid"
+    else
+      others=$(printf '%s\n' "$ips" | grep -v "^$IP$" | sort -u | tr '\n' ' ' || true)
+      printf '  %-22s via %-16s %s answered, %s STALE %s\n' "$host" "$ip" "$n_valid" "$n_wrong" "$others"
+      dns_ok=0
+    fi
+  done
 done
+
+if [ "$dns_ok" -ne 1 ]; then
+  echo
+  echo "  Not every authoritative server answers $IP yet."
+  echo "  If the records are already set at box.co.il, this is their replication"
+  echo "  catching up and there is nothing to do but wait — re-run this script."
+  echo
+  echo "  The records should be:"
+  echo "     A   @     $IP"
+  echo "     A   www   $IP"
+  echo "  with the Vercel ones removed (A @ 76.76.21.21, CNAME www)."
+  exit 1
+fi
 
 say "2/5  certificate"
 certbot --nginx -d "$NEW" -d "www.$NEW" \
