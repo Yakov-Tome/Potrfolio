@@ -45,7 +45,7 @@ export async function generateMetadata({ params }) {
   return {
     title,
     description: t.about.cards[0],
-    metadataBase: new URL("https://yakov.iresale.co.il"),
+    metadataBase: new URL(site.url),
     alternates: {
       canonical: `/${locale}`,
       languages: { en: "/en", he: "/he", "x-default": "/en" },
