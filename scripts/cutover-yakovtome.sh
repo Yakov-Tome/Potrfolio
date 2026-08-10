@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # Move the portfolio from yakov.iresale.co.il to yakovtome.com.
 #
+# ALREADY RUN — 2026-08-10. Kept as the record of what the move consisted of,
+# and because the DNS gate at the top is the thing to re-run when checking
+# whether the apex has finally stopped answering from two zone versions. Do not
+# run it whole again: it would re-issue the certificate and rewrite the old
+# domain's nginx block, both of which are already done.
+#
 # Run this AFTER the A record for yakovtome.com points at this box. It refuses
 # to do anything until it does, because every step past the first depends on it:
 # Let's Encrypt proves the domain over HTTP, and a certificate cannot be issued
