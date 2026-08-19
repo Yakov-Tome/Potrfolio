@@ -18,7 +18,7 @@ export default async function Home({ params }) {
 
   return (
     <>
-      <Hero t={t} />
+      <Hero t={t} locale={locale} />
       <About t={t} />
       <Testimonials t={t} />
       <Stack t={t} locale={locale} />

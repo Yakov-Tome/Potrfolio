@@ -35,7 +35,7 @@ import { motion, useReducedMotion } from "framer-motion";
  *               · a thin ArrowDown 48x60 at top 104px
  *               · an Arc of text, `rotate:true animateDuration:20`
  */
-export default function ProfilePhoto({ alt, ringText }) {
+export default function ProfilePhoto({ alt, ringText, rtl = false }) {
   const reduce = useReducedMotion();
 
   // Above 1200 the card is a tilted, turnable object; below it, a flat photo
@@ -100,13 +100,24 @@ export default function ProfilePhoto({ alt, ringText }) {
         <span className="profile-circle profile-circle-big" />
         <span className="profile-circle profile-circle-small" />
 
+        {/* The ring inherits `direction: rtl` from <html> on the Hebrew page,
+            and that is not a thing to fight — it is how SVG is meant to place
+            right-to-left text on a path. What it needs is the matching start.
+            An RTL run is laid out from `startOffset` BACKWARDS along the path,
+            so at the default offset of 0 the whole string ran off the near end:
+            it measured 178px of glyphs collapsed into a 10x17 box at (-5,-12),
+            outside the circle entirely, which is why the Hebrew card turned
+            over to show two empty rings. Starting at the far end sends it right
+            round, anticlockwise, with the words in reading order and the
+            glyphs facing the way they are read.
+            The path stays clockwise in both languages — it is the design's. */}
         <svg className="profile-ring" viewBox="0 0 140 140">
           <defs>
             {/* r=56 puts the baseline between the two circles. */}
             <path id="profile-ring-path" fill="none" d="M70,14 a56,56 0 1,1 -0.1,0" />
           </defs>
           <text>
-            <textPath href="#profile-ring-path" startOffset="0">
+            <textPath href="#profile-ring-path" startOffset={rtl ? "100%" : "0"}>
               {ringText}
             </textPath>
           </text>

@@ -6,6 +6,7 @@ import Shape3D from "@/components/ui/Shape3D";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import ProfilePhoto from "@/components/ui/ProfilePhoto";
+import { isRtl } from "@/lib/content";
 
 /**
  * Hero, laid out from the Framer "Top Section" and moving the way the published
@@ -85,7 +86,7 @@ const ELEMENTS = [
 
 const RENDER_BOX = "h-[140px] w-[140px] md:h-[200px] md:w-[200px] lg:h-[280px] lg:w-[280px]";
 
-export default function Hero({ t }) {
+export default function Hero({ t, locale }) {
   const reduce = useReducedMotion();
   // The renders want raw scroll pixels, because that is the unit their rates
   // were measured in. Nothing else in this section is scroll-linked.
@@ -123,7 +124,7 @@ export default function Hero({ t }) {
         ))}
       </div>
 
-      <Profile t={t} />
+      <Profile t={t} locale={locale} />
     </section>
   );
 }
@@ -241,7 +242,7 @@ function Decor({ el, scrollY, reduce }) {
  * Clients" row and puts another 24 below it; with no such row the button simply
  * takes the 24.)
  */
-function Profile({ t }) {
+function Profile({ t, locale }) {
   return (
     // The PHOTO is the anchor, not the column. In the Framer file the "Profile"
     // frame IS the 280x280 portrait, pinned cx:50% cy:50%, and the heading,
@@ -276,7 +277,7 @@ function Profile({ t }) {
         <SkillsTicker items={[t.hero.role, ...t.hero.skillsTicker]} />
       </div>
 
-      <ProfilePhoto alt={t.hero.greeting} ringText={t.hero.photoRing} />
+      <ProfilePhoto alt={t.hero.greeting} ringText={t.hero.photoRing} rtl={isRtl(locale)} />
 
       {/* Below: clients 24px clear of the photo, button 24px below that — which
           puts the button 84px under the photo, the node's b:-168 exactly. With
