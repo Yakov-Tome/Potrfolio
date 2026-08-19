@@ -5,7 +5,7 @@ import Shape3D from "@/components/ui/Shape3D";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import StackCard from "@/components/ui/StackCard";
 import { APPEAR_SPRING } from "@/components/motion/Reveal";
-import { skills } from "@/lib/content";
+import { skillGroups } from "@/lib/content";
 import { skillCopy } from "@/lib/skill-copy";
 
 /**
@@ -49,19 +49,34 @@ export default function Stack({ t, locale }) {
             bug behind the cube sliding off the left edge in Hebrew — `start-1/2`
             resolves to `right: 50%` in RTL while `-translate-x-1/2` stays
             physical, so the two compose into a box a full width off-centre. */}
-        <div className="cap relative grid grid-cols-1 gap-4 md:[--cap:810px] md:grid-cols-2 md:gap-6 lg:[--cap:1200px] lg:grid-cols-3">
-          <StackRender reduce={reduce} />
-          {skills.map((skill) => (
-            <ScrollScale key={skill.id} reduce={reduce}>
-              <StackCard
-                skill={skill}
-                description={skillCopy[skill.id]?.[locale] ?? ""}
-                flipLabel={t.stack.flip}
-                flipBackLabel={t.stack.flipBack}
-              />
-            </ScrollScale>
-          ))}
-        </div>
+        {skillGroups.map((group) => (
+          <div key={group.group} className="flex flex-col gap-8 md:gap-12">
+            {/* One level below the section heading and centred like it, so the
+                group reads as a subdivision of "My Stack" rather than as a
+                second section. Rendered only when the dictionary has a label
+                for the key — a missing one shows the cards, not the raw key.
+                No weight utility: .t-h3 already sets 500, and this stylesheet
+                loads after Tailwind, so one would have been a no-op that read
+                like a decision. */}
+            {t.stack.groups?.[group.group] && (
+              <h3 className="t-h3 section-title">{t.stack.groups[group.group]}</h3>
+            )}
+
+            <div className="cap relative grid grid-cols-1 gap-4 md:[--cap:810px] md:grid-cols-2 md:gap-6 lg:[--cap:1200px] lg:grid-cols-3">
+              <StackRender reduce={reduce} />
+              {group.items.map((skill) => (
+                <ScrollScale key={skill.id} reduce={reduce}>
+                  <StackCard
+                    skill={skill}
+                    description={skillCopy[skill.id]?.[locale] ?? ""}
+                    flipLabel={t.stack.flip}
+                    flipBackLabel={t.stack.flipBack}
+                  />
+                </ScrollScale>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
