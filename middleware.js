@@ -1,17 +1,22 @@
 import { NextResponse } from "next/server";
 import { LOCALES, DEFAULT_LOCALE } from "@/lib/content";
+import { LOCALE_COOKIE, readLocale } from "@/lib/locale-cookie";
 
-// Every page lives under /en or /he. A request without a locale is sent to the
-// visitor's own language when we can tell, and to English when we cannot —
-// Hebrew is only chosen on an explicit Accept-Language signal, never guessed
-// from geography.
+// Every page lives under /en or /he. A request without a locale goes to English
+// unless the visitor has previously chosen otherwise.
+//
+// English is the start, always — no Accept-Language sniffing. That header says
+// what languages the browser was configured with, which for an Israeli visitor
+// is very often Hebrew even when they would rather read a developer's portfolio
+// in English, and it is not something they can see or correct. The site now has
+// one predictable first impression, and one visible control that changes it.
+//
+// The exception is a language the visitor picked themselves. The switch in the
+// nav writes it to a cookie, and that cookie is the only thing that overrides
+// English here. Nothing else sets it: opening a shared /he link shows Hebrew,
+// as the URL asks, but does not silently repoint the visitor's next visit.
 function pick(request) {
-  const header = request.headers.get("accept-language") || "";
-  const wantsHebrew = header
-    .split(",")
-    .map((part) => part.split(";")[0].trim().toLowerCase())
-    .some((tag) => tag === "he" || tag.startsWith("he-") || tag === "iw");
-  return wantsHebrew ? "he" : DEFAULT_LOCALE;
+  return readLocale(request.cookies.get(LOCALE_COOKIE)?.value) ?? DEFAULT_LOCALE;
 }
 
 export function middleware(request) {
@@ -33,7 +38,13 @@ export function middleware(request) {
   const url = host ? new URL(target, `${proto}://${host}`) : request.nextUrl.clone();
   if (!host) url.pathname = target;
 
-  return NextResponse.redirect(url);
+  const response = NextResponse.redirect(url);
+  // This redirect is decided by a cookie, so it must not be reused for the next
+  // visitor — or for the same one after they switch. 307 is not cacheable by
+  // default, but saying so beats depending on every proxy agreeing.
+  response.headers.set("Cache-Control", "no-store");
+  response.headers.set("Vary", "Cookie");
+  return response;
 }
 
 export const config = {
