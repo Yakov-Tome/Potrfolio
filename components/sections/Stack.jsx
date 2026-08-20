@@ -37,20 +37,38 @@ export default function Stack({ t, locale }) {
       <div className="shell relative z-10 flex flex-col gap-[var(--section-gap)]">
         <h2 className="t-h2 section-title">{t.stack.title}</h2>
 
-        {/* Three bands, and the middle one was missing: 1 column with a 16px gap
-            below 810; 2 columns capped at 810 with a 24px gap from 810 to 1199;
-            3 columns capped at 1200 with a 24px gap from 1200. Measured on the
-            build, the column tracks are 358 / 393 / 384 at 390 / 900 / 1440.
+        {/* ONE cube for the whole section, not one per group. Splitting the
+            cards into groups put a <StackRender> inside each grid and so drew
+            three of them, stacked down the page — it should travel the section
+            once, from the first card to the last, the way it did when this was
+            a single grid.
 
-            `relative` because the render is anchored to THIS box: measured in
-            document space the cube's top sits at the grid's top +16 on desktop
-            and -106 on tablet, and its centre is the grid's centre. It used to
-            hang off the section with `start-1/2 -translate-x-1/2`, which is the
-            bug behind the cube sliding off the left edge in Hebrew — `start-1/2`
-            resolves to `right: 50%` in RTL while `-translate-x-1/2` stays
-            physical, so the two compose into a box a full width off-centre. */}
-        {skillGroups.map((group) => (
-          <div key={group.group} className="flex flex-col gap-8 md:gap-12">
+            It is anchored to THIS box, which wraps every group: the cube is
+            positioned against its containing block, and that block now has to
+            span all of them for the travel to be continuous. `relative` here,
+            and not on the individual grids.
+
+            It used to hang off the section with `start-1/2 -translate-x-1/2`,
+            which is the bug behind the cube sliding off the left edge in Hebrew
+            — `start-1/2` resolves to `right: 50%` in RTL while
+            `-translate-x-1/2` stays physical, so the two composed into a box a
+            full width off-centre. */}
+        <div className="relative flex flex-col gap-[var(--section-gap)]">
+          <StackRender reduce={reduce} />
+
+          {/* Each group is `relative z-10` so it passes IN FRONT of the cube.
+              The cube is absolutely positioned at z-index 0, and a positioned
+              element at z-index 0 paints above static inline content — without
+              it the cube covered "Microsoft Cloud" and "IT Infrastructure"
+              outright. The cards were never affected: their ScrollScale
+              wrappers are transformed and make their own stacking context,
+              which is why this only appeared once the headings did.
+              Worth recording how it nearly went unnoticed: elementFromPoint at
+              the heading reported the H3 on top, because .decor sets
+              pointer-events:none and hit testing skips it. Hit order and paint
+              order disagree here — only the screenshot was right. */}
+          {skillGroups.map((group) => (
+          <div key={group.group} className="relative z-10 flex flex-col gap-8 md:gap-12">
             {/* One level below the section heading and centred like it, so the
                 group reads as a subdivision of "My Stack" rather than as a
                 second section. Rendered only when the dictionary has a label
@@ -62,8 +80,12 @@ export default function Stack({ t, locale }) {
               <h3 className="t-h3 section-title">{t.stack.groups[group.group]}</h3>
             )}
 
-            <div className="cap relative grid grid-cols-1 gap-4 md:[--cap:810px] md:grid-cols-2 md:gap-6 lg:[--cap:1200px] lg:grid-cols-3">
-              <StackRender reduce={reduce} />
+            {/* Three bands, and the middle one was missing: 1 column with a
+                16px gap below 810; 2 columns capped at 810 with a 24px gap from
+                810 to 1199; 3 columns capped at 1200 with a 24px gap from 1200.
+                Measured on the build, the column tracks are 358 / 393 / 384 at
+                390 / 900 / 1440. */}
+            <div className="cap grid grid-cols-1 gap-4 md:[--cap:810px] md:grid-cols-2 md:gap-6 lg:[--cap:1200px] lg:grid-cols-3">
               {group.items.map((skill) => (
                 <ScrollScale key={skill.id} reduce={reduce}>
                   <StackCard
@@ -75,8 +97,9 @@ export default function Stack({ t, locale }) {
                 </ScrollScale>
               ))}
             </div>
-          </div>
-        ))}
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -145,8 +168,13 @@ function StackRender({ reduce }) {
   //
   // `inset-x-0 bottom-0` with an explicit top rather than `inset-0` plus an
   // override, so nothing depends on class order.
+  //
+  // The two top values carry a +77 that the measurements above do not: the
+  // containing block used to be the grid and is now the box wrapping every
+  // group, which starts one group heading higher. -110 became -33 and 20 became
+  // 97, and the cube measures the same distance from the first grid as before.
   return (
-    <div className="decor pointer-events-none absolute inset-x-0 bottom-0 top-[-110px] hidden md:block lg:top-5" aria-hidden="true">
+    <div className="decor pointer-events-none absolute inset-x-0 bottom-0 top-[-33px] z-0 hidden md:block lg:top-[97px]" aria-hidden="true">
       {/* The sticky element carries the cube's HEIGHT, and that is what decides
           where it lets go: a sticky box releases when its own bottom reaches the
           bottom of its containing block, so a zero-height one would stay pinned
