@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Shape3D from "@/components/ui/Shape3D";
 import { motion, useReducedMotion } from "framer-motion";
 import { experience, education, site } from "@/lib/content";
@@ -102,9 +103,11 @@ export default function Resume({ t, locale }) {
       start: cert.start,
       title: t.education.items[cert.id].name,
       meta: `${cert.provider} · ${fmt(cert.start)}`,
-      body: `${t.education.credential}: ${cert.credential}`,
+      // No body. The credential id used to be printed here as a line of text;
+      // the certificate is now shown, and it carries the id on its face.
       link: cert.link,
       linkLabel: t.resume.viewCertificate,
+      image: cert.image,
     })),
   ].sort((a, b) => a.start.localeCompare(b.start));
 
@@ -207,19 +210,40 @@ export default function Resume({ t, locale }) {
                   ) : (
                     <p className="t-body-big text-start">{item.body}</p>
                   )}
-                  {item.link && (
+                  {/* The certificate itself, not a link to go and look at it.
+                      Still wrapped in the link so it stays verifiable at the
+                      source — the label is the accessible name rather than a
+                      line of visible text.
+
+                      It takes the column's full width — 816 at 1440, 487 at
+                      900, 358 at 390 — which at the 1600x1190 source is 607,
+                      362 and 266 tall. */}
+                  {item.image && item.link && (
                     <a
                       href={item.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="t-body-small link-underline mt-4 inline-flex w-fit font-medium text-black no-underline"
+                      aria-label={`${item.title} — ${item.linkLabel}`}
+                      className="mt-4 block w-full"
                     >
-                      {item.linkLabel}
+                      <Image
+                        src={item.image}
+                        alt={item.title}
+                        width={1600}
+                        height={1190}
+                        sizes="(max-width: 809px) 358px, (max-width: 1199px) 487px, 816px"
+                        className="h-auto w-full rounded-[16px] shadow-[0_5px_20px_rgba(0,0,0,0.08)]"
+                      />
                     </a>
                   )}
                 </div>
 
-                <Shape shape={SHAPES[i % SHAPES.length]} reduce={reduce} />
+                {/* No decorative render on a slot that shows a certificate.
+                    The certificate takes the column's full width and comes to
+                    607px tall at 1440, which runs 210px into the shape's box —
+                    measured. One of them has to give, and it is not the
+                    content. The other five slots keep theirs. */}
+                {!item.image && <Shape shape={SHAPES[i % SHAPES.length]} reduce={reduce} />}
               </div>
             ))}
           </div>
